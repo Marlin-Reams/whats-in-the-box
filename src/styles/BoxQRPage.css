@@ -1,0 +1,114 @@
+.qr-page-wrapper {
+    background-color: #e8f5e9;
+    padding: 2rem;
+    min-height: 100vh;
+    box-sizing: border-box;
+  }
+  
+  .back-home-btn {
+    background-color: #4caf50;
+    color: white;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+    cursor: pointer;
+  }
+  
+  .back-home-btn:hover {
+    background-color: #388e3c;
+  }
+  
+  .form-title {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #2e7d32;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  
+  .qr-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+  
+  .green-btn {
+    background-color: #4caf50;
+    color: white;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  .green-btn:hover {
+    background-color: #388e3c;
+  }
+  .green-btn.disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+  
+  .qr-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem; /* Adds consistent space between items */
+    justify-content: center;
+    padding: 1rem;
+  }
+  
+  .qr-card {
+    width: 220px;
+    background-color: #ffffff;
+    border: 1px solid #c8e6c9;
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    transition: background-color 0.3s ease;
+  }
+  
+  .qr-card.selected {
+    box-shadow: 0 0 0 3px #9be29b;
+    background-color: #f1fff1;
+    transition: all 0.2s ease;
+  }
+  
+  .qr-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+
+  .qr-title {
+    font-weight: bold;
+    margin: 0.5rem 0;
+    color: #2e7d32;
+  }
+  
+  .qr-select {
+    display: block;
+    margin: 0.5rem 0;
+  }
+  
+  .blue-btn {
+    background-color: #2196f3;
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .blue-btn:hover {
+    background-color: #1976d2;
+  }
+  

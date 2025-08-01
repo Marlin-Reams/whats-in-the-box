@@ -1,0 +1,28 @@
+/* src/styles/ScanPage.css */
+.scan-page-container {
+    text-align: center;
+    padding: 20px;
+    background-color: #eef9f1;
+    min-height: 100vh;
+  }
+  
+  .scanner-wrapper {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+  }
+  
+  .scanner-controls {
+    margin-top: 10px;
+  }
+  
+  .stop-button {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  

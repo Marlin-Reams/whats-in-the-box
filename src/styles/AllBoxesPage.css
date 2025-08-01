@@ -1,0 +1,175 @@
+/* Page Container */
+.page-container {
+  background-color: #e8f5e9;
+  min-height: 100vh;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+/* Page Title */
+.page-title {
+  font-size: 1.75rem;
+  font-weight: bold;
+  color: #2e7d32;
+  margin: 0;
+}
+
+.page-header-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+/* Back Button */
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+  width: fit-content;
+  margin-bottom: 1rem;
+}
+
+.back-button:hover {
+  background-color: #388e3c;
+}
+
+/* Search Bar */
+.search-bar {
+  width: 100%;
+  max-width: 400px;
+  padding: 0.6rem 1rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  box-sizing: border-box;
+}
+
+/* Grid Layout */
+.boxes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+  max-width: 900px;
+  margin: 0 auto;
+  padding-bottom: 2rem;
+}
+
+.box-card {
+  background: linear-gradient(to bottom, #ffffff, #dcedc8);
+  border: 2px solid #a5d6a7;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  padding: 1.25rem;
+  text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+  max-width: 100%;       /* ✅ cap card width */
+  margin: 0;           /* ✅ center in grid column */
+}
+
+.box-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+}
+
+/* Box Title */
+.box-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2e7d32;
+  margin-bottom: 0.25rem;
+}
+
+/* Notes Text */
+.box-notes {
+  font-size: 0.95rem;
+  color: #388e3c;
+  margin-bottom: 0.75rem;
+  padding: 0 0.25rem;
+  word-wrap: break-word;
+}
+
+/* Action Buttons Container */
+.box-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+/* Action Button Base */
+.box-action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 90px;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.95rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: white;
+  text-decoration: none;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.box-action-button:hover {
+  transform: scale(1.05);
+}
+
+/* Button Icons */
+.box-action-button span {
+  font-size: 1.2rem;
+  margin-right: 0.35rem;
+}
+
+/* Button Types */
+.box-action-button.open {
+  background-color: #4caf50;
+}
+.box-action-button.edit {
+  background-color: #2196f3;
+}
+.box-action-button.delete {
+  background-color: #f44336;
+}
+.box-action-button.save {
+  background-color: #4caf50;
+}
+.box-action-button.cancel {
+  background-color: #9e9e9e;
+}
+
+/* Input Field (for editing mode) */
+.box-edit-input {
+  width: 100%;
+  padding: 0.6rem;
+  font-size: 1rem;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  margin-bottom: 0.6rem;
+  box-sizing: border-box;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+

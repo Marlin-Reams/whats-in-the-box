@@ -1,0 +1,65 @@
+.qr-page-wrapper {
+    background-color: #e8f5e9;
+    min-height: 100vh;
+    padding: 2rem;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .back-button {
+    text-decoration: none;
+    padding: 0.6rem 1.2rem;
+    background-color: #34a853;
+    color: white;
+    font-weight: bold;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .qr-title {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #2e7d32;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .qr-scanner-wrapper {
+    background: #f1f8e9;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+  }
+  
+  .green-btn {
+    background-color: #34a853;
+    color: white;
+    padding: 0.7rem 1.4rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .green-btn:hover {
+    background-color: #2e7d32;
+  }
+  
+  #qr-reader {
+    width: 100%;
+    margin-top: 1rem;
+  }

@@ -1,0 +1,214 @@
+/* Grid Layout */
+.item-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* Always 2 columns, even on mobile */
+  gap: 1rem;
+  padding: 1rem;
+  justify-content: center;
+}
+
+/* Individual Card */
+.item-card {
+  background-color: #f1fdf5; /* soft light green */
+  border: 1px solid #a5d6a7;
+  border-radius: 16px;
+  padding: 1.25rem 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.2s ease;
+  text-align: center;
+}
+
+.item-card:hover {
+  transform: translateY(-4px);
+}
+
+/* Image Styling */
+.item-image {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid #c8e6c9;
+  margin-bottom: 0.75rem;
+}
+
+/* Info Text */
+.item-info {
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.item-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2e7d32;
+}
+
+.item-qty,
+.item-desc {
+  font-size: 0.9rem;
+  color: #388e3c;
+  margin-top: 0.25rem;
+}
+
+/* Button Group */
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.action-buttons button {
+  flex: 1 1 auto;
+  min-width: 80px;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.95rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+/* Individual Buttons */
+.action-buttons .delete {
+  background-color: #e53935;
+  color: white;
+}
+.action-buttons .delete:hover {
+  background-color: #c62828;
+}
+
+.action-buttons .edit {
+  background-color: #42a5f5;
+  color: white;
+}
+.action-buttons .edit:hover {
+  background-color: #1e88e5;
+}
+
+.action-buttons .move {
+  background-color: #fdd835;
+  color: #333;
+}
+.action-buttons .move:hover {
+  background-color: #fbc02d;
+}
+
+/* Move to Box Dropdown */
+.move-box-controls {
+  margin-top: 0.75rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.move-box-controls select,
+.move-box-controls button {
+  padding: 0.5rem;
+  width: 100%;
+  max-width: 180px;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background-color: #fff8e1;
+  color: #333;
+  cursor: pointer;
+}
+
+.move-box-controls button.move {
+  background-color: #43a047 !important;
+  color: white;
+}
+.move-box-controls button.move:hover {
+  background-color: #2e7d32 !important;
+}
+
+.move-box-controls select:hover {
+  background-color: #fff3c2;
+}
+
+/* Search Bar */
+.search-bar {
+  display: block;
+  margin: 1rem auto;
+  width: 100%;
+  max-width: 483px;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+}
+
+/* Edit Mode Styles */
+.item-edit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.item-edit input[type="text"],
+.item-edit input[type="number"] {
+  width: 90%;
+  max-width: 200px;
+  padding: 0.4rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 0.9rem;
+}
+
+.item-edit input[type="file"] {
+  width: 90%;
+  max-width: 200px;
+  font-size: 0.85rem;
+  border: none;
+  background-color: transparent;
+  padding: 0.3rem 0;
+}
+
+.item-edit img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+  border: 1px solid #ccc;
+}
+
+/* Save / Cancel Buttons */
+.item-edit .action-buttons {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.item-edit .action-buttons button {
+  flex: 1 1 auto;
+  min-width: 90px;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.item-edit .action-buttons button:first-of-type {
+  background-color: #4caf50;
+  color: white;
+}
+
+.item-edit .action-buttons button:last-of-type {
+  background-color: #f44336;
+  color: white;
+}
