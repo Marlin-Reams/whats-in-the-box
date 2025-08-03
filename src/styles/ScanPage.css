@@ -1,28 +1,53 @@
+.qr-scanner-wrapper {
+  width: 100%;
+  max-width: 360px;
+  margin: 2rem auto;
+  padding: 1rem;
+  background-color: #e8f5e9;
+  border-radius: 16px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  border: 1px solid #a5d6a7;
+  text-align: center;
+}
+
+#html5qr-code-full-region {
+  width: 100% !important;
+  max-width: 320px;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 0 auto;
+}
 /* src/styles/ScanPage.css */
 .scan-page-container {
-    text-align: center;
-    padding: 20px;
-    background-color: #eef9f1;
-    min-height: 100vh;
-  }
-  
-  .scanner-wrapper {
-    display: flex;
-    justify-content: center;
-    margin: 20px 0;
-  }
-  
-  .scanner-controls {
-    margin-top: 10px;
-  }
-  
-  .stop-button {
-    background-color: #e74c3c;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 6px;
-    font-size: 16px;
-    cursor: pointer;
-  }
-  
+  text-align: center;
+  padding: 20px;
+  background-color: #eef9f1;
+  min-height: 100vh;
+}
+
+.scanner-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.scanner-controls {
+  margin-top: 10px;
+}
+
+.stop-button {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+}
+/* Force inner video and canvas elements to respect border-radius */
+#html5qr-code-full-region video,
+#html5qr-code-full-region canvas {
+  border-radius: 12px !important;
+  overflow: hidden;
+}

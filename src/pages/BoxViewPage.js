@@ -37,7 +37,8 @@ const BoxViewPage = () => {
   const boxItems = items.filter(item => item.boxId === box.id);
   
   const filteredItems = boxItems.filter(item =>
-    item.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleAddItem = (boxId, newItem) => {
