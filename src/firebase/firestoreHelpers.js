@@ -6,21 +6,36 @@ import {
   getDocs,
   updateDoc,
   deleteDoc,
-  doc
+  doc,
+  query,
+  where
 } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 
 // Reference to the boxes collection
 const boxesCollection = collection(db, 'boxes');
 
-// Add a box to Firestore
+// Add a box to Firestore with userId
 export const addBoxToFirestore = async (box) => {
-  const docRef = await addDoc(boxesCollection, box);
+  const auth = getAuth();
+  const user = auth.currentUser;
+  if (!user) throw new Error("User not authenticated");
+
+  const docRef = await addDoc(boxesCollection, {
+    ...box,
+    userId: user.uid,
+  });
   return docRef.id;
 };
 
-// Fetch all boxes from Firestore
+// Fetch only the boxes that belong to the current user
 export const fetchBoxesFromFirestore = async () => {
-  const snapshot = await getDocs(boxesCollection);
+  const auth = getAuth();
+  const user = auth.currentUser;
+  if (!user) throw new Error("User not authenticated");
+
+  const q = query(boxesCollection, where("userId", "==", user.uid));
+  const snapshot = await getDocs(q);
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 };
 
