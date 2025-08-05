@@ -1,0 +1,35 @@
+.bug-report-page {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 1.5rem;
+    background: #f1f8e9;
+    border: 1px solid #c5e1a5;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  }
+  
+  .bug-report-page textarea {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    resize: vertical;
+    margin-bottom: 1rem;
+  }
+  
+  .bug-report-page button {
+    background-color: #66bb6a;
+    color: white;
+    font-weight: bold;
+    border: none;
+    padding: 0.75rem 1.2rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .bug-report-page button:hover {
+    background-color: #388e3c;
+  }
+  

@@ -4,11 +4,15 @@ import { useItemContext } from '../context/ItemContext';
 import { useBoxContext } from '../context/BoxContext';
 import ItemList from '../components/ItemList';
 import '../styles/LooseItemsPage.css';
+import BugReportModal from '../components/BugReportModal';
+
 
 const LooseItemsPage = () => {
   const { looseItems, deleteItem, updateItem, addItem, moveItemToBox } = useItemContext();
 
   const { boxes, addItemToBox } = useBoxContext();
+  const [showBugModal, setShowBugModal] = useState(false);
+
 
   const [searchTerm, setSearchTerm] = useState('');
   const [editingIndex, setEditingIndex] = useState(null);
@@ -43,7 +47,9 @@ const LooseItemsPage = () => {
   );
 
   return (
+    
     <div className="loose-items-container">
+      
       <Link to="/" className="back-button">🏠 Back to Home</Link>
       
 

@@ -15,6 +15,7 @@ import ScanPage from './pages/ScanPage';
 import AuthForm from './components/AuthForm';
 import LogoutButton from './components/LogoutButton';
 import LostAndFoundPage from './pages/LostAndFoundPage';
+import BugReportPage from './pages/BugReportPage';
 
 function App() {
   const { boxes } = useBoxContext();
@@ -64,6 +65,8 @@ function App() {
             <Route path="/scan" element={<ScanPage />} />
             <Route path="/loose-items" element={<LooseItemsPage />} />
             <Route path="/lost-found" element={<LostAndFoundPage />} />
+            <Route path="/bug-report" element={<BugReportPage />} />
+
           </Routes>
         </>
       )}
