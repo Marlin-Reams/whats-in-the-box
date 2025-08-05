@@ -1,8 +1,3 @@
-// //if i have top code uncommented i can add item in a box i can edit item in a box i cannont
-// //delete or move item back to loose items
-
-// /* if i have bottom uncommented i can not edit or add and item to a box from inside the box, but i can move and delete and item */
-
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { QRCodeCanvas } from 'qrcode.react';
@@ -29,7 +24,9 @@ const BoxViewPage = () => {
 
   useEffect(() => {
     const found = getBoxById(boxId);
-    setBox(found);
+    if (found) {
+      setBox(found);
+    }
   }, [boxId, getBoxById]);
 
   if (!box) return <p>Box not found or no data available.</p>;
@@ -149,110 +146,3 @@ const BoxViewPage = () => {
 };
 
 export default BoxViewPage;
-
-
-// import React, { useEffect, useState } from 'react';
-// import { useParams, Link } from 'react-router-dom';
-// import { QRCodeCanvas } from 'qrcode.react';
-
-// import { useBoxContext } from '../context/BoxContext';
-// import { useItemContext } from '../context/ItemContext';
-
-// import AddItemForm from '../components/AddItemForm';
-// import ItemList from '../components/ItemList';
-
-// import '../styles/ItemList.css';
-
-// const BoxViewPage = () => {
-//   const { boxId } = useParams();
-//   const { getBoxById } = useBoxContext();
-//   const { items, addItem, updateItem, deleteItem, moveItemToBox } = useItemContext();
-
-//   const [box, setBox] = useState(null);
-//   const [searchTerm, setSearchTerm] = useState('');
-//   const [editingIndex, setEditingIndex] = useState(null);
-//   const [editedItem, setEditedItem] = useState(null);
-
-//   useEffect(() => {
-//     const foundBox = getBoxById(boxId);
-//     setBox(foundBox);
-//   }, [boxId, getBoxById]);
-
-//   if (!box) return <p>Box not found or no data available.</p>;
-
-//   const boxItems = items.filter(item => item.boxId === box.id);
-
-//   const handleAddItem = (boxId, newItem) => {
-//     addItem({ ...newItem, boxId });
-//   };
-
-//   const handleDeleteItem = (item) => {
-//     deleteItem(item.id);
-//   };
-
-//   const handleMoveToLooseItems = (item) => {
-//     moveItemToBox(item.id, null);
-//   };
-
-//   const handleSaveEdit = (itemId, updatedData) => {
-//     updateItem(itemId, { ...updatedData, boxId });
-//     setEditingIndex(null);
-//     setEditedItem(null);
-//   };
-
-//   return (
-//     <div style={{ padding: '1rem' }}>
-//       <Link to="/">
-//         <button style={{ marginBottom: '1rem' }}>🏠 Back to Home</button>
-//       </Link>
-
-//       <h1>📦 {box.title}</h1>
-//       <p><strong>Notes:</strong> {box.notes || 'None'}</p>
-
-//       <div style={{ marginBottom: '1.5rem' }}>
-//         <h4>📱 QR Code for this box</h4>
-//         <QRCodeCanvas
-//           value={`${window.location.origin}/view/${box.id}`}
-//           size={150}
-//           bgColor="#ffffff"
-//           fgColor="#000000"
-//           level="H"
-//           includeMargin={true}
-//         />
-//       </div>
-
-//       <AddItemForm boxId={box.id} onAddItem={handleAddItem} />
-
-//       <input
-//         type="text"
-//         placeholder="Search items..."
-//         value={searchTerm}
-//         onChange={(e) => setSearchTerm(e.target.value)}
-//         style={{ marginBottom: '1rem', padding: '0.5rem', width: '100%' }}
-//       />
-
-//       <h3>Items in this box:</h3>
-//       <div className="item-grid">
-//         <ItemList
-//           items={boxItems}
-//           searchTerm={searchTerm}
-//           onDelete={handleDeleteItem}
-//           onMoveToLooseItems={handleMoveToLooseItems}
-//           onEdit={(item) => {
-//             setEditingIndex(item.id);
-//             setEditedItem(item);
-//           }}
-//           editingIndex={editingIndex}
-//           editedItem={editedItem}
-//           setEditedItem={setEditedItem}
-//           setEditingIndex={setEditingIndex}
-//           onSaveEdit={(item) => handleSaveEdit(item.id, item)}
-//         />
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default BoxViewPage;
-
-
