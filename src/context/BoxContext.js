@@ -110,6 +110,7 @@ export const BoxProvider = ({ children }) => {
           const cloudBoxes = await fetchBoxesFromFirestore();
           setBoxes(cloudBoxes);
           console.log("✅ Synced boxes from Firestore:", cloudBoxes);
+          console.log('✅ Boxes loaded:', cloudBoxes);
         } catch (err) {
           console.error("❌ Failed to load boxes from Firestore:", err);
         }

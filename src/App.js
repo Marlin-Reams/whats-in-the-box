@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
 import { useBoxContext } from './context/BoxContext';
@@ -14,6 +14,7 @@ import LooseItemsPage from './pages/LooseItemsPage';
 import ScanPage from './pages/ScanPage';
 import AuthForm from './components/AuthForm';
 import LogoutButton from './components/LogoutButton';
+import LostAndFoundPage from './pages/LostAndFoundPage';
 
 function App() {
   const { boxes } = useBoxContext();
@@ -49,6 +50,8 @@ function App() {
             }}
           >
             <LogoutButton />
+            
+
           </header>
 
           <Routes>
@@ -60,6 +63,7 @@ function App() {
             <Route path="/view/:boxId" element={<BoxViewPage />} />
             <Route path="/scan" element={<ScanPage />} />
             <Route path="/loose-items" element={<LooseItemsPage />} />
+            <Route path="/lost-found" element={<LostAndFoundPage />} />
           </Routes>
         </>
       )}

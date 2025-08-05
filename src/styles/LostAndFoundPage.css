@@ -1,0 +1,88 @@
+/* src/styles/LostAndFoundPage.css */
+
+.lost-found-page {
+    padding: 1.5rem;
+    max-width: 900px;
+    margin: 0 auto;
+    font-family: sans-serif;
+  }
+  
+  .back-button {
+    background-color: #66bb6a;
+    color: white;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    display: inline-block;
+    margin-bottom: 1rem;
+    transition: background-color 0.2s ease;
+  }
+  
+  .back-button:hover {
+    background-color: #558b2f;
+  }
+  
+  .lost-found-page h2 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .lost-items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1.2rem;
+    margin-top: 1rem;
+  }
+  
+  .lost-item-card {
+    background-color: #e8f5e9;
+    border: 1px solid #c8e6c9;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .lost-item-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+  }
+  
+  .lost-item-card h4 {
+    margin: 0 0 0.5rem;
+    font-size: 1.1rem;
+  }
+  
+  .lost-item-card img {
+    max-width: 100%;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+  }
+  
+  .lost-item-card select,
+  .lost-item-card button {
+    width: 100%;
+    margin-top: 0.5rem;
+    padding: 0.4rem;
+    font-size: 0.9rem;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+  }
+  
+  .lost-item-card button {
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .lost-item-card button:hover {
+    background-color: #388e3c;
+  }
+  
+  

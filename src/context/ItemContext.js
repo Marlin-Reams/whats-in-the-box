@@ -122,6 +122,8 @@ useEffect(() => {
         const firestoreItems = await fetchItemsFromFirestore();
         setItems(firestoreItems);
         console.log('✅ Synced items from Firestore:', firestoreItems);
+        console.log('✅ Items loaded:', firestoreItems);
+
       } catch (err) {
         console.error('❌ Failed to fetch items from Firestore:', err);
       } finally {

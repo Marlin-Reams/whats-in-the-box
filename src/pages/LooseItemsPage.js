@@ -45,6 +45,8 @@ const LooseItemsPage = () => {
   return (
     <div className="loose-items-container">
       <Link to="/" className="back-button">🏠 Back to Home</Link>
+      
+
       <h1 className="page-title">🧩 Loose Items</h1>
 
       <button
@@ -52,7 +54,9 @@ const LooseItemsPage = () => {
         onClick={() => setShowAddForm(prev => !prev)}
       >
         {showAddForm ? '➖ Cancel' : '➕ Add New Item'}
+        
       </button>
+     
 
       {showAddForm && (
         <div className="add-form">
@@ -121,8 +125,13 @@ const LooseItemsPage = () => {
         editedItem={editedItem}
         setEditedItem={setEditedItem}
       />
+      <Link to="/lost-found" className="floating-lost-found">
+      🧳 Lost & Found
+    </Link>
     </div>
+    
   );
+  
 };
 
 export default LooseItemsPage;

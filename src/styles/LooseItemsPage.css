@@ -115,3 +115,41 @@
   border: 1px solid #ccc;
   border-radius: 8px;
 }
+
+.green-button {
+  display: inline-block;
+  padding: 0.6rem 1.2rem;
+  background-color: #66bb6a;
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 1rem;
+  margin: 0.5rem 0;
+  text-align: center;
+  transition: background-color 0.2s ease;
+}
+
+.green-button:hover {
+  background-color: #388e3c;
+}
+
+/* Floating button in bottom-right */
+.floating-lost-found {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #66bb6a;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-weight: bold;
+  text-decoration: none;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  transition: background-color 0.2s ease;
+  z-index: 1000;
+}
+
+.floating-lost-found:hover {
+  background-color: #388e3c;
+}
