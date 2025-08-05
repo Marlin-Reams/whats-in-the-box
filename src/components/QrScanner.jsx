@@ -47,13 +47,20 @@ const QrScanner = ({ onScanSuccess }) => {
   useEffect(() => {
     html5QrCodeRef.current = new Html5Qrcode(qrCodeRegionId);
     let isScannerRunning = false;
-
+  
     Html5Qrcode.getCameras()
       .then(devices => {
         if (devices.length) {
+          // Try to find a back-facing camera
+          const backCamera = devices.find(device =>
+            device.label.toLowerCase().includes('back')
+          );
+  
+          const selectedDeviceId = backCamera ? backCamera.id : devices[0].id;
+  
           html5QrCodeRef.current
             .start(
-              devices[0].id,
+              selectedDeviceId,
               { fps: 10, qrbox: { width: 250, height: 250 } },
               (decodedText) => {
                 onScanSuccess(decodedText);
@@ -72,7 +79,7 @@ const QrScanner = ({ onScanSuccess }) => {
         }
       })
       .catch(console.error);
-
+  
     return () => {
       if (html5QrCodeRef.current && isScannerRunning) {
         html5QrCodeRef.current
