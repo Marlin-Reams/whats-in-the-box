@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/whats-in-the-box/static/css/main.8b360962.css",
-    "main.js": "/whats-in-the-box/static/js/main.700162ba.js",
+    "main.css": "/whats-in-the-box/static/css/main.0f53d346.css",
+    "main.js": "/whats-in-the-box/static/js/main.b708b8c9.js",
     "index.html": "/whats-in-the-box/index.html",
-    "main.8b360962.css.map": "/whats-in-the-box/static/css/main.8b360962.css.map",
-    "main.700162ba.js.map": "/whats-in-the-box/static/js/main.700162ba.js.map"
+    "main.0f53d346.css.map": "/whats-in-the-box/static/css/main.0f53d346.css.map",
+    "main.b708b8c9.js.map": "/whats-in-the-box/static/js/main.b708b8c9.js.map"
   },
   "entrypoints": [
-    "static/css/main.8b360962.css",
-    "static/js/main.700162ba.js"
+    "static/css/main.0f53d346.css",
+    "static/js/main.b708b8c9.js"
   ]
 }
