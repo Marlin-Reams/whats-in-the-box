@@ -95,6 +95,7 @@
 // src/context/ItemContext.js
 // src/context/ItemContext.js
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import {
   addItemToFirestore,
   deleteItemFromFirestore,
@@ -110,8 +111,13 @@ export const ItemProvider = ({ children }) => {
   const [hasLoaded, setHasLoaded] = useState(false);
 
   // Load items from Firestore on mount
-  useEffect(() => {
-    const load = async () => {
+  
+
+useEffect(() => {
+  const auth = getAuth();
+
+  const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    if (user) {
       try {
         const firestoreItems = await fetchItemsFromFirestore();
         setItems(firestoreItems);
@@ -121,9 +127,14 @@ export const ItemProvider = ({ children }) => {
       } finally {
         setHasLoaded(true);
       }
-    };
-    load();
-  }, []);
+    } else {
+      console.warn('⚠️ User not logged in. Skipping item fetch.');
+      setHasLoaded(true); // still mark as loaded to avoid hanging UI
+    }
+  });
+
+  return () => unsubscribe();
+}, []);
 
   // Add new item
   const addItem = async (item) => {

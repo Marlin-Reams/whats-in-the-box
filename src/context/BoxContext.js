@@ -87,6 +87,7 @@
 // export const useBoxContext = () => useContext(BoxContext);
 
 import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import {
   addBoxToFirestore,
   fetchBoxesFromFirestore,
@@ -101,17 +102,23 @@ export const BoxProvider = ({ children }) => {
   const isFirstMount = useRef(true);
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const cloudBoxes = await fetchBoxesFromFirestore();
-        setBoxes(cloudBoxes);
-        console.log("✅ Synced boxes from Firestore:", cloudBoxes);
-      } catch (err) {
-        console.error("❌ Failed to load boxes from Firestore:", err);
+    const auth = getAuth();
+  
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          const cloudBoxes = await fetchBoxesFromFirestore();
+          setBoxes(cloudBoxes);
+          console.log("✅ Synced boxes from Firestore:", cloudBoxes);
+        } catch (err) {
+          console.error("❌ Failed to load boxes from Firestore:", err);
+        }
+      } else {
+        console.warn("⚠️ User not logged in. Skipping box fetch.");
       }
-    };
-
-    load();
+    });
+  
+    return () => unsubscribe();
   }, []);
 
   const addBox = async (box) => {
