@@ -32,13 +32,6 @@ const BoxViewPage = () => {
   if (!box) return <p>Box not found or no data available.</p>;
 
   const boxItems = items.filter(item => item.boxId === box.id);
-  console.log('📦 Currently Viewing Box:', box);         // Show box ID and title
-  console.log('📦 box.id:', box?.id);                    // Confirm it's defined
-  console.log('📦 All Items:', items);                   // Show all items
-  console.log('📦 Filtered Items for Box:', boxItems);   // Show filtered result
-  items.forEach(item => {
-    console.log(`🔍 Item ID: ${item.id}, Name: ${item.name}, boxId: ${item.boxId}, matches: ${item.boxId == box.id}`);
-  });
   
   const filteredItems = boxItems.filter(item =>
     item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||

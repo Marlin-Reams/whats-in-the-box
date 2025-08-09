@@ -26,7 +26,7 @@ const BugReportPage = () => {
 
   return (
     <div className="bug-report-page">
-      <h2>🐞 Bug Report</h2>
+      <h2> Help Request </h2>
       {submitted ? (
         <p>✅ Thank you! Your bug report has been submitted.</p>
       ) : (

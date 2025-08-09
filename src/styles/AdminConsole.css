@@ -1,0 +1,150 @@
+.admin-console {
+    max-width: 1000px;
+    margin: 2rem auto;
+    padding: 1rem;
+    background-color: #f9fff3;
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.08);
+    font-family: 'Segoe UI', sans-serif;
+  }
+  
+  .admin-console h1 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: #2e7d32;
+    font-size: 2rem;
+  }
+  
+  /* ✅ Tab Bar (Material-style) */
+  .tab-bar {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #c8e6c9;
+  }
+  
+  .tab-btn {
+    background: none;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: border-color 0.3s ease, color 0.3s ease;
+    color: #666;
+  }
+  
+  .tab-btn:hover {
+    color: #2e7d32;
+  }
+  
+  .tab-btn.active {
+    border-color: #2e7d32;
+    color: #2e7d32;
+    font-weight: bold;
+  }
+  
+  /* ✅ Status Filter Buttons */
+  .status-filter {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .filter-btn {
+    padding: 0.5rem 1rem;
+    background-color: #e8f5e9;
+    border: 1px solid #a5d6a7;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+  }
+  
+  .filter-btn:hover {
+    background-color: #c8e6c9;
+  }
+  
+  .filter-btn.active {
+    background-color: #66bb6a;
+    color: white;
+  }
+  
+  /* ✅ Summary Stats */
+  .summary-stats {
+    display: flex;
+    justify-content: space-around;
+    background-color: #f1f8e9;
+    padding: 0.5rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+  }
+  
+  /* ✅ Request List */
+  .bug-report-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .bug-report-item {
+    background-color: white;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-left: 6px solid #ccc;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  
+  .bug-report-item.submitted { border-left-color: #ffa726; }
+  .bug-report-item.working { border-left-color: #42a5f5; }
+  .bug-report-item.testing { border-left-color: #ab47bc; }
+  .bug-report-item.corrected { border-left-color: #66bb6a; }
+  
+  .bug-actions {
+    margin-top: 0.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .bug-actions button {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-weight: bold;
+  }
+  
+  .bug-actions button:hover {
+    opacity: 0.9;
+  }
+  
+  .bug-actions button:nth-child(1) { background-color: #42a5f5; color: white; }
+  .bug-actions button:nth-child(2) { background-color: #ab47bc; color: white; }
+  .bug-actions button:nth-child(3) { background-color: #66bb6a; color: white; }
+  .bug-actions button:nth-child(4) { background-color: #ef5350; color: white; }
+
+  .unauthorized-container {
+    padding: 2rem;
+    text-align: center;
+    background-color: #ffebee;
+    border: 2px solid #c62828;
+    color: #b71c1c;
+    margin: 2rem;
+    border-radius: 12px;
+  }
+  
+  .unauthorized-header {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #c62828;
+  }
+
+  

@@ -124,8 +124,20 @@ export const BoxProvider = ({ children }) => {
 
   const addBox = async (box) => {
     try {
-      const id = await addBoxToFirestore(box);
-      const newBox = { ...box, id, items: box.items || [] };
+      const auth = getAuth();
+      const user = auth.currentUser;
+  
+      if (!user) throw new Error("User not authenticated");
+  
+      const boxWithUser = {
+        ...box,
+        userId: user.uid,
+        createdAt: new Date().toISOString(),
+        items: box.items || []
+      };
+  
+      const id = await addBoxToFirestore(boxWithUser);
+      const newBox = { ...boxWithUser, id };
       setBoxes((prev) => [...prev, newBox]);
       console.log("✅ Box added:", newBox);
     } catch (err) {
@@ -135,15 +147,27 @@ export const BoxProvider = ({ children }) => {
 
   const updateBox = async (boxId, updatedBox) => {
     try {
-      await updateBoxInFirestore(boxId, updatedBox);
+      const boxToUpdate = boxes.find((b) => b.id === boxId);
+      if (!boxToUpdate) throw new Error("Box not found");
+  
+      const completeUpdate = {
+        ...boxToUpdate,
+        ...updatedBox, // overwrite title, notes, etc.
+        userId: boxToUpdate.userId // ✅ ensure userId is preserved
+      };
+  
+      await updateBoxInFirestore(boxId, completeUpdate);
+  
       setBoxes((prev) =>
-        prev.map((b) => (b.id === boxId ? { ...b, ...updatedBox } : b))
+        prev.map((b) => (b.id === boxId ? { ...b, ...completeUpdate } : b))
       );
+  
       console.log("✅ Box updated:", boxId);
     } catch (err) {
       console.error("❌ Failed to update box:", err);
     }
   };
+  
 
   const deleteBox = async (boxId, moveItemsToLoose) => {
     try {

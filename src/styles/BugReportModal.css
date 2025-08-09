@@ -79,4 +79,40 @@
     background-color: #388e3c;
   }
   
+  /* 🎯 Enhanced Request Type Section */
+  .type-selector {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
+    background-color: #e8f5e9;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    border: 1px solid #c8e6c9;
+  }
+  
+  .type-selector label {
+    font-weight: bold;
+    color: #2e7d32;
+    white-space: nowrap;
+  }
+  
+  .type-selector select {
+    flex-grow: 1;
+    padding: 0.6rem;
+    border-radius: 8px;
+    border: 1px solid #a5d6a7;
+    font-size: 1rem;
+    background-color: #ffffff;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .type-selector select:focus {
+    outline: none;
+    border-color: #388e3c;
+    box-shadow: 0 0 0 2px rgba(56, 142, 60, 0.2);
+  }
+  
+  
   
