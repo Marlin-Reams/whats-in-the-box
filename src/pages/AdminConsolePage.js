@@ -1,80 +1,67 @@
-import React, { useEffect, useState } from 'react';
+// AdminConsolePage.jsx
+import React, { useEffect, useState, useMemo } from 'react';
 import {
-  collection,
-  getDocs,
-  orderBy,
-  query,
-  doc,
-  updateDoc,
-  deleteDoc,
-  addDoc
+  collection, getDocs, orderBy, query, doc, updateDoc, deleteDoc, addDoc
 } from 'firebase/firestore';
 import { db } from '../firebase/firebaseConfig';
-import { getAuth } from 'firebase/auth';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import '../styles/AdminConsole.css';
 
 const allowedUIDs = [
   process.env.REACT_APP_ADMIN_UID_1,
-  process.env.REACT_APP_ADMIN_UID_2
-];
+  process.env.REACT_APP_ADMIN_UID_2,
+].filter(Boolean); // remove undefineds
 
 const AdminConsolePage = () => {
   const [requests, setRequests] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);       // auth + data loading
+  const [authReady, setAuthReady] = useState(false);  // specifically wait for auth
+  const [user, setUser] = useState(null);
   const [filter, setFilter] = useState('all');
   const [tab, setTab] = useState('bug');
   const [countdown, setCountdown] = useState(30);
-  const user = getAuth().currentUser;
   const navigate = useNavigate();
 
-  const fetchRequests = async () => {
-    try {
-      const q = query(collection(db, 'requests'), orderBy('submittedAt', 'desc'));
-      const snapshot = await getDocs(q);
-      const all = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setRequests(all);
-    } catch (err) {
-      console.error("❌ Failed to fetch requests:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const isAdmin = useMemo(
+    () => !!user && allowedUIDs.includes(user.uid),
+    [user]
+  );
 
-  const updateRequestStatus = async (id, status) => {
-    try {
-      const ref = doc(db, 'requests', id);
-      await updateDoc(ref, { status });
-      setRequests(prev =>
-        prev.map(r => r.id === id ? { ...r, status } : r)
-      );
-    } catch (err) {
-      console.error('❌ Failed to update status:', err);
-    }
-  };
-
-  const deleteRequest = async (id) => {
-    const confirmed = window.confirm("Are you sure you want to delete this request?");
-    if (!confirmed) return;
-
-    try {
-      await deleteDoc(doc(db, 'requests', id));
-      setRequests(prev => prev.filter(r => r.id !== id));
-    } catch (err) {
-      console.error('❌ Failed to delete request:', err);
-    }
-  };
-
+  // ✅ Wait for Firebase Auth to finish restoring the session
   useEffect(() => {
-    if (user && allowedUIDs.includes(user.uid)) {
-      fetchRequests();
-    } else {
-      setLoading(false);
-    }
-  }, [user]);
+    const auth = getAuth();
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      setAuthReady(true);
+    });
+    return unsub;
+  }, []);
 
+  // ✅ Fetch only after we *know* auth state and user is admin
   useEffect(() => {
-    if (user && !allowedUIDs.includes(user.uid)) {
+    const fetchRequests = async () => {
+      try {
+        const q = query(collection(db, 'requests'), orderBy('submittedAt', 'desc'));
+        const snapshot = await getDocs(q);
+        const all = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        setRequests(all);
+      } catch (err) {
+        console.error("❌ Failed to fetch requests:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (!authReady) return;          // wait for onAuthStateChanged
+    if (isAdmin) fetchRequests();
+    else setLoading(false);          // not admin → stop loading
+  }, [authReady, isAdmin]);
+
+  // ✅ Unauthorized redirect only after auth is known
+  useEffect(() => {
+    if (!authReady) return;
+    if (user && !isAdmin) {
       const interval = setInterval(() => {
         setCountdown(prev => {
           if (prev === 1) {
@@ -85,7 +72,8 @@ const AdminConsolePage = () => {
         });
       }, 1000);
 
-      const logUnauthorizedAttempt = async () => {
+      // Optional: log unauthorized attempt
+      (async () => {
         try {
           await addDoc(collection(db, 'unauthorizedAccessLogs'), {
             uid: user?.uid || 'anonymous',
@@ -95,17 +83,34 @@ const AdminConsolePage = () => {
         } catch (err) {
           console.error("Failed to log unauthorized attempt:", err);
         }
-      };
-
-      logUnauthorizedAttempt();
+      })();
 
       return () => clearInterval(interval);
     }
-  }, [user, navigate]);
+  }, [authReady, user, isAdmin, navigate]);
 
-  if (loading) return <p>Loading requests...</p>;
+  const updateRequestStatus = async (id, status) => {
+    try {
+      await updateDoc(doc(db, 'requests', id), { status });
+      setRequests(prev => prev.map(r => r.id === id ? { ...r, status } : r));
+    } catch (err) {
+      console.error('❌ Failed to update status:', err);
+    }
+  };
 
-  if (!user || !allowedUIDs.includes(user.uid)) {
+  const deleteRequest = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this request?")) return;
+    try {
+      await deleteDoc(doc(db, 'requests', id));
+      setRequests(prev => prev.filter(r => r.id !== id));
+    } catch (err) {
+      console.error('❌ Failed to delete request:', err);
+    }
+  };
+
+  if (!authReady || loading) return <p>Loading…</p>;
+
+  if (!isAdmin) {
     return (
       <div className="unauthorized-container">
         <h2 className="unauthorized-header">🚨 Unauthorized Access</h2>
@@ -122,16 +127,22 @@ const AdminConsolePage = () => {
   const countByStatus = (status) =>
     requests.filter(r => r.type === tab && (r.status || 'submitted') === status).length;
 
-  return (
-    
-    <div className="admin-console">
-        <button className="return-button" onClick={() => navigate('/')}>
-  🔙 Return to App
-</button>
-      <h1>🛠️ Admin Console</h1>
-      
+  // Helper to render Firestore Timestamp or ISO/string
+  const fmt = (submittedAt) => {
+    try {
+      if (!submittedAt) return '—';
+      if (typeof submittedAt.toDate === 'function') return submittedAt.toDate().toLocaleString();
+      return new Date(submittedAt).toLocaleString();
+    } catch {
+      return '—';
+    }
+  };
 
-      {/* 🔄 Tab Bar */}
+  return (
+    <div className="admin-console">
+      <button className="return-button" onClick={() => navigate('/')}>🔙 Return to App</button>
+      <h1>🛠️ Admin Console</h1>
+
       <div className="tab-bar">
         {['bug', 'feature', 'support'].map(t => (
           <button
@@ -144,7 +155,6 @@ const AdminConsolePage = () => {
         ))}
       </div>
 
-      {/* 🧮 Status Filter */}
       <div className="status-filter">
         {['all', 'submitted', 'working', 'testing', 'corrected'].map(status => (
           <button
@@ -157,7 +167,6 @@ const AdminConsolePage = () => {
         ))}
       </div>
 
-      {/* 📋 Request List */}
       {filteredRequests.length === 0 ? (
         <p>No {tab} requests found for filter: <strong>{filter}</strong>.</p>
       ) : (
@@ -168,9 +177,8 @@ const AdminConsolePage = () => {
               <li key={req.id} className={`bug-report-item ${statusClass}`}>
                 <p><strong>Description:</strong> {req.description}</p>
                 <p><strong>User:</strong> {req.userId}</p>
-                <p><strong>Submitted:</strong> {new Date(req.submittedAt).toLocaleString()}</p>
+                <p><strong>Submitted:</strong> {fmt(req.submittedAt)}</p>
                 <p><strong>Status:</strong> {statusClass}</p>
-
                 <div className="bug-actions">
                   <button onClick={() => updateRequestStatus(req.id, 'working')}>🔧 Working</button>
                   <button onClick={() => updateRequestStatus(req.id, 'testing')}>🧪 Testing</button>

@@ -43,3 +43,20 @@ ios/Pods/
 
 # Capacitor generated resources
 /resources
+
+# Android/Gradle noise
+.android/
+.gradle/
+**/.gradle/
+**/local.properties
+**/*.iml
+
+# IDE stuff
+.idea/
+.vscode/
+
+# Firebase iOS (if you add iOS later)
+GoogleService-Info.plist
+
+# Safer ignore for google-services.json anywhere
+**/google-services.json
