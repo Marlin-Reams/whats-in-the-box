@@ -1,5 +1,3 @@
-# whats-in-the-box
-
 # What's in the Box
 
 A lightweight, full‑stack inventory app for organizing and locating stored items using QR codes.
