@@ -21,7 +21,7 @@ jest.mock('../context/ItemContext', () => ({ useItemContext: () => ({ loading: f
 test('global search finds a boxed item and tells the family where it is', () => {
   render(<MemoryRouter><HomePage /></MemoryRouter>);
   fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'cups' } });
-  expect(screen.getByRole('link', { name: /Measuring cups.*Garage/ })).toHaveAttribute('href', '/view/kitchen');
+  expect(screen.getByRole('link', { name: /Measuring cups.*Garage/ })).toHaveAttribute('href', '/view/kitchen?family=reams');
 });
 test('global search includes loose items', () => {
   render(<MemoryRouter><HomePage /></MemoryRouter>);

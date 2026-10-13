@@ -1,15 +1,18 @@
+import { useInventoryScope } from '../context/InventoryScope';
+import { boxPath } from '../utils/inventory';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBoxContext } from '../context/BoxContext';
 import '../styles/AddBox.css';
 export default function AddBox() {
+  const { familyId } = useInventoryScope();
   const { addBox } = useBoxContext(), navigate = useNavigate();
   const [title, setTitle] = useState(''), [notes, setNotes] = useState(''), [location, setLocation] = useState('');
   const [saving, setSaving] = useState(false), [error, setError] = useState('');
   async function submit(event) {
     event.preventDefault(); if (saving) return;
     setSaving(true); setError('');
-    try { const id = await addBox({ title, notes, location }); navigate('/view/' + id); }
+    try { const id = await addBox({ title, notes, location }); navigate(boxPath(id, familyId)); }
     catch (failure) { setError(failure.message || 'Could not create this box. Try again.'); }
     finally { setSaving(false); }
   }

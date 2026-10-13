@@ -1,9 +1,12 @@
+import { useInventoryScope } from '../context/InventoryScope';
+import { boxPath } from '../utils/inventory';
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useBoxContext } from '../context/BoxContext';
 import { useItemContext } from '../context/ItemContext';
 import ItemPhoto from '../components/ItemPhoto';
 export default function AllBoxesPage() {
+  const { familyId } = useInventoryScope();
   const { boxes, updateBox, deleteBox, loading, error } = useBoxContext(), { items } = useItemContext();
   const [search, setSearch] = useState(''), [editing, setEditing] = useState(null), [data, setData] = useState({});
   const [busy, setBusy] = useState(false), [failure, setFailure] = useState('');
@@ -31,7 +34,7 @@ export default function AllBoxesPage() {
         </form> : <>
           <h2>{box.title}</h2><p className="location">{box.location || 'Location not set'}</p><p>{box.notes}</p>
           <p>{items.filter(item => item.boxId === box.id).length} items</p>
-          <div className="action-buttons"><Link className="primary-link" to={'/view/' + box.id}>Open box</Link>
+          <div className="action-buttons"><Link className="primary-link" to={boxPath(box.id, familyId)}>Open box</Link>
             <button disabled={busy} onClick={() => { setEditing(box.id); setData({ title: box.title, notes: box.notes || '', location: box.location || '' }); }}>Edit</button>
             <button disabled={busy} className="delete" onClick={() => {
               if (window.confirm('Delete “' + box.title + '”? Its items will move to loose items.')) act(() => deleteBox(box.id));

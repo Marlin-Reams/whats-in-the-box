@@ -1,3 +1,4 @@
+import { boxPath } from '../utils/inventory';
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useBoxContext } from '../context/BoxContext';
@@ -24,14 +25,14 @@ export default function HomePage() {
     {term ? <section><h2>Search results</h2>
       <ul className="search-results">{matchingItems.map(item => {
         const box = boxes.find(b => b.id === item.boxId);
-        return <li key={item.id}><Link to={box ? '/view/' + box.id : item.boxId ? '/lost-found' : '/loose-items'}>
+        return <li key={item.id}><Link to={box ? boxPath(box.id, familyId) : item.boxId ? '/lost-found' : '/loose-items'}>
           <strong>{item.name}</strong><span>{box ? box.title + ' · ' + (box.location || 'Location not set') : item.boxId ? 'Missing box · recover item' : 'Loose item'}</span></Link></li>;
       })}{boxes.filter(b => (b.title + ' ' + (b.location || '') + ' ' + (b.notes || '')).toLowerCase().includes(term)).map(box =>
-        <li key={box.id}><Link to={'/view/' + box.id}><strong>{box.title}</strong><span>{box.location || 'Location not set'} · Box</span></Link></li>)}</ul>
+        <li key={box.id}><Link to={boxPath(box.id, familyId)}><strong>{box.title}</strong><span>{box.location || 'Location not set'} · Box</span></Link></li>)}</ul>
       {!matchingItems.length && !boxes.some(b => (b.title + ' ' + (b.location || '') + ' ' + (b.notes || '')).toLowerCase().includes(term)) && <p>No matches. Try another name or description.</p>}
     </section> : <section><div className="section-heading"><h2>Your boxes</h2><Link to="/boxes">View all</Link></div>
       {!boxes.length && !boxLoading && <div className="empty-state"><h3>Start with one box.</h3><p>Name it, add a location, and list what’s inside. The next move will be easier.</p><Link to="/add-box">Create your first box</Link></div>}
-      <div className="boxes-grid">{boxes.slice(0, 6).map(box => <Link className="box-card" key={box.id} to={'/view/' + box.id}>
+      <div className="boxes-grid">{boxes.slice(0, 6).map(box => <Link className="box-card" key={box.id} to={boxPath(box.id, familyId)}>
         <h3>{box.title}</h3><p className="location">{box.location || 'Location not set'}</p><span>{items.filter(i => i.boxId === box.id).length} items</span></Link>)}</div>
     </section>}
   </main>;
