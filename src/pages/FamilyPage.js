@@ -5,7 +5,7 @@ import { db } from '../firebase/firebaseConfig';
 import { useInventoryScope } from '../context/InventoryScope';
 import { createFamily, joinFamily, createInvite, revokeInvite, removeMember, restoreMember, leaveFamily, copyPersonalInventory } from '../firebase/familyService';
 export default function FamilyPage() {
-  const { user, families, familyId, setFamilyId, error: scopeError } = useInventoryScope();
+  const { user, families, familyId, setFamilyId, defaultFamilyId, saveDefaultInventory, error: scopeError } = useInventoryScope();
   const [name, setName] = useState(''), [code, setCode] = useState(''), [busy, setBusy] = useState(false);
   const [error, setError] = useState(''), [message, setMessage] = useState('');
   const [family, setFamily] = useState(null), [members, setMembers] = useState([]), [invites, setInvites] = useState([]);
@@ -34,6 +34,12 @@ export default function FamilyPage() {
     {(error || scopeError) && <p role="alert" className="error-text">{error || scopeError}</p>}{message && <p role="status">{message}</p>}
     <label>Viewing inventory<select value={familyId || ''} disabled={busy} onChange={e => setFamilyId(e.target.value || null)}>
       <option value="">Personal inventory</option>{families.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}</select></label>
+    <section><h2>Default inventory</h2><p>Choose the inventory to open when you sign in or refresh. Saved for your account in this browser. Switching inventories above does not change your default.</p>
+      <label>Open by default<select value={defaultFamilyId || ''} disabled={busy} onChange={e => {
+        if (saveDefaultInventory(e.target.value)) { setError(''); setMessage('Default inventory saved. You are now viewing it.'); }
+        else setError('Your browser could not save the default. Allow site storage and try again.');
+      }}><option value="">Personal inventory</option>{families.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}</select></label>
+    </section>
     <div className="family-forms"><form onSubmit={e => { e.preventDefault(); act(async () => {
       const id = await createFamily(user, name); setFamilyId(id); setName(''); setMessage('Family created. Invite someone below.');
     }); }}><h2>Create a family</h2><label>Family name<input value={name} onChange={e => setName(e.target.value)} required maxLength={80} /></label><button disabled={busy}>Create family</button></form>
