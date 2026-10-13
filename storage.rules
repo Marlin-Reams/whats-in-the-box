@@ -1,0 +1,20 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() { return request.auth != null; }
+    function image() { return request.resource != null && request.resource.contentType.matches('image/.*') && request.resource.size < 10 * 1024 * 1024; }
+    match /user_uploads/{uid}/{path=**} {
+      allow read, delete: if signedIn() && request.auth.uid == uid;
+      allow create, update: if signedIn() && request.auth.uid == uid && image();
+    }
+    match /family_uploads/{fid}/{file} {
+      function member() {
+        return signedIn() && firestore.get(/databases/(default)/documents/families/$(fid)/members/$(request.auth.uid)).data.role in ['owner','member'];
+      }
+      allow read, delete: if member();
+      allow create: if member() && image();
+      allow update: if false;
+    }
+    match /{path=**} { allow read, write: if false; }
+  }
+}

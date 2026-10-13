@@ -23,13 +23,16 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-     "start": "react-scripts start",
-  "build": "react-scripts build",
-  "test": "react-scripts test",
-  "eject": "react-scripts eject",
-  "predeploy": "npm run build",
-  "deploy": "gh-pages -d build",
-  "android": "npm run build && npx cap copy android && npx cap open android"
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
+    "android": "npm run build && npx cap copy android && npx cap open android",
+    "prebuild": "node scripts/check-build.cjs",
+    "test:rules": "firebase emulators:exec --only firestore,storage --project demo-whats-in-the-box \"node tests/security.mjs\"",
+    "emulators": "firebase emulators:start --only auth,firestore,storage --project demo-whats-in-the-box"
   },
   "eslintConfig": {
     "extends": [
@@ -50,6 +53,18 @@
     ]
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.2",
+    "firebase-tools": "^14.27.0",
     "gh-pages": "^6.3.0"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "jest": {
+    "moduleNameMapper": {
+      "^react-router-dom$": "<rootDir>/node_modules/react-router-dom/dist/index.js",
+      "^react-router/dom$": "<rootDir>/node_modules/react-router/dist/development/dom-export.js",
+      "^react-router$": "<rootDir>/node_modules/react-router/dist/development/index.js"
+    }
   }
 }

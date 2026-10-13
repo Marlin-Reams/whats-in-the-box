@@ -1,245 +1,56 @@
-// import React, { createContext, useContext, useEffect, useState } from 'react';
-
-// const ItemContext = createContext();
-
-// export const ItemProvider = ({ children }) => {
-//   const [items, setItems] = useState([]);
-//   const [hasLoaded, setHasLoaded] = useState(false);
-
-//   // Load items from localStorage on mount
-//   useEffect(() => {
-//     const storedItems = localStorage.getItem('whatsinthebox_all_items');
-//     if (storedItems) {
-//       try {
-//         const parsed = JSON.parse(storedItems);
-//         setItems(parsed);
-//         console.log('✅ Parsed and loaded items:', parsed);
-//       } catch (err) {
-//         console.error('❌ Failed to parse localStorage items:', err);
-//       }
-//     }
-//     setHasLoaded(true);
-//   }, []);
-
-//   // Save items to localStorage when changed
-//   useEffect(() => {
-//     if (hasLoaded) {
-//       localStorage.setItem('whatsinthebox_all_items', JSON.stringify(items));
-//       console.log('💾 Saved items to localStorage:', items);
-//     }
-//   }, [items, hasLoaded]);
-
-//   // Add new item
-//   const addItem = (item) => {
-//     const itemWithId = {
-//       ...item,
-//       id: item.id || crypto.randomUUID(),
-//       boxId: item.boxId ?? null,  // ✅ keep incoming boxId if defined
-//     };
-  
-//     setItems((prevItems) => {
-//       const exists = prevItems.some(existing => existing.id === itemWithId.id);
-//       return exists ? prevItems : [...prevItems, itemWithId];
-//     });
-//   };
-
-//   // Delete item by ID
-//   const deleteItem = (itemId) => {
-//     setItems((prev) => prev.filter(item => item.id !== itemId));
-//   };
-
-//   // Update item by ID
-//   const updateItem = (itemId, updatedData) => {
-//     setItems((prev) =>
-//       prev.map(item =>
-//         item.id === itemId ? { ...item, ...updatedData } : item
-//       )
-//     );
-//   };
-
-//   // Move a single item to a different box (or to loose)
-//   const moveItemToBox = (itemId, boxId) => {
-//     updateItem(itemId, { boxId });
-//   };
-
-//   // Move all items from a deleted box to loose items
-//   const moveItemsToLoose = (boxId) => {
-//     setItems((prev) =>
-//       prev.map(item =>
-//         item.boxId === boxId ? { ...item, boxId: null } : item
-//       )
-//     );
-//   };
-
-//   // Derived list of loose items
-//   const looseItems = items.filter(item => item.boxId === null);
-
-//   return (
-//     <ItemContext.Provider
-//       value={{
-//         items,
-//         looseItems,
-//         addItem,
-//         deleteItem,
-//         updateItem,
-//         moveItemToBox,
-//         moveItemsToLoose,
-//       }}
-//     >
-//       {children}
-//     </ItemContext.Provider>
-//   );
-// };
-
-// export const useItemContext = () => useContext(ItemContext);
-// src/context/ItemContext.js
-// src/context/ItemContext.js
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import {
-  addItemToFirestore,
-  deleteItemFromFirestore,
-  fetchItemsFromFirestore,
-  updateItemInFirestore,
-  uploadImageAndGetURL
-} from '../firebase/firestoreItemHelpers';
-
+import { toast } from 'react-toastify';
+import { useInventoryScope } from './InventoryScope';
+import { useBoxContext } from './BoxContext';
+import { subscribeInventory, createInventory, updateInventory, uploadPhoto, deleteInventoryItem, cleanPhoto } from '../firebase/inventoryService';
+import { resolveBoxId, validateItem } from '../utils/inventory';
 const ItemContext = createContext();
-
-export const ItemProvider = ({ children }) => {
-  const [items, setItems] = useState([]);
-  const [hasLoaded, setHasLoaded] = useState(false);
-
-  // Load items from Firestore on mount
-  
-
-useEffect(() => {
-  const auth = getAuth();
-
-  const unsubscribe = onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      try {
-        const firestoreItems = await fetchItemsFromFirestore();
-        setItems(firestoreItems);
-        console.log('✅ Synced items from Firestore:', firestoreItems);
-        console.log('✅ Items loaded:', firestoreItems);
-
-      } catch (err) {
-        console.error('❌ Failed to fetch items from Firestore:', err);
-      } finally {
-        setHasLoaded(true);
-      }
-    } else {
-      console.warn('⚠️ User not logged in. Skipping item fetch.');
-      setHasLoaded(true); // still mark as loaded to avoid hanging UI
-    }
-  });
-
-  return () => unsubscribe();
-}, []);
-
-  // Add new item
-  const addItem = async (item) => {
-    const itemId = item.id || crypto.randomUUID();
-    let itemToStore = {
-      ...item,
-      id: itemId,
-      boxId: item.boxId ?? null
-    };
-
-    // Upload image to Firebase Storage if photo is present
-    if (item.photo && item.photo.startsWith('data:image')) {
-      try {
-        const photoURL = await uploadImageAndGetURL(item.photo, itemId);
-        itemToStore.photo = photoURL;
-      } catch (err) {
-        console.warn('⚠️ Proceeding without image URL due to upload failure');
-        itemToStore.photo = '';
-      }
-    }
-
-    try {
-      await addItemToFirestore(itemToStore);
-      setItems((prevItems) => [...prevItems, itemToStore]);
-      console.log('✅ Item added:', itemToStore);
-    } catch (err) {
-      console.error('❌ Failed to add item:', err);
+export function ItemProvider({ children }) {
+  const { scope } = useInventoryScope(), { boxes } = useBoxContext();
+  const key = scope ? scope.userId + ':' + (scope.familyId || '') : '';
+  const [state, setState] = useState({ key: '', items: [], loading: false, error: '' });
+  useEffect(() => {
+    let active = true;
+    setState({ key, items: [], loading: !!scope, error: '' });
+    if (!scope) return;
+    const stop = subscribeInventory(scope, 'items', items => {
+      if (active) setState({ key, items, loading: false, error: '' });
+    }, () => { if (active) setState({ key, items: [], loading: false, error: 'Could not load items. Check your connection and try again.' }); });
+    return () => { active = false; stop(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+  const items = state.key === key ? state.items.map(item => ({ ...item, boxId: resolveBoxId(item.boxId, boxes) })) : [];
+  async function prepare(item) {
+    const data = validateItem(item);
+    if (data.boxId && !boxes.some(box => box.id === data.boxId)) throw new Error('Choose an available box.');
+    if (data.photo?.startsWith('data:image')) { data.photoPath = await uploadPhoto(scope, data.photo); data.photo = null; }
+    return { name: data.name, quantity: data.quantity, description: data.description,
+      boxId: data.boxId || null, photo: data.photo || null, photoPath: data.photoPath || null };
+  }
+  const addItem = async item => {
+    const data = await prepare(item);
+    try { return await createInventory(scope, 'items', data); }
+    catch (error) { if (data.photoPath && data.photoPath !== item.photoPath) await cleanPhoto(data.photoPath); throw error; }
+  };
+  const updateItem = async (id, data) => {
+    const current = items.find(item => item.id === id);
+    if (!current) throw new Error('Item not found.');
+    const prepared = await prepare({ ...current, ...data });
+    try { await updateInventory(scope, 'items', id, prepared); }
+    catch (error) { if (prepared.photoPath && prepared.photoPath !== current.photoPath) await cleanPhoto(prepared.photoPath); throw error; }
+    if (current.photoPath && current.photoPath !== prepared.photoPath) {
+      const warning = await cleanPhoto(current.photoPath); if (warning) toast.warning(warning);
     }
   };
-
-  // Delete item by ID
-  const deleteItem = async (itemId) => {
-    try {
-      await deleteItemFromFirestore(itemId);
-      setItems((prev) => prev.filter(item => item.id !== itemId));
-      console.log('🗑️ Item deleted:', itemId);
-    } catch (err) {
-      console.error('❌ Failed to delete item:', err);
-    }
+  const deleteItem = async id => {
+    const item = items.find(item => item.id === id);
+    if (!item) throw new Error('Item not found.');
+    const warning = await deleteInventoryItem(scope, item);
+    if (warning) toast.warning(warning);
   };
-
-  // Update item by ID
-  const updateItem = async (itemId, updatedData) => {
-    try {
-      let updatedItemData = { ...updatedData };
-  
-      // 🔍 Check if it's a new image that needs to be compressed
-      if (updatedData.photo && updatedData.photo.startsWith('data:image')) {
-        try {
-          const photoURL = await uploadImageAndGetURL(updatedData.photo, itemId);
-          updatedItemData.photo = photoURL;
-        } catch (err) {
-          console.warn('⚠️ Proceeding without updated image due to upload failure');
-          updatedItemData.photo = '';
-        }
-      }
-  
-      // 🔁 Send updated data to Firestore
-      await updateItemInFirestore(itemId, updatedItemData);
-  
-      // 🔄 Update local state
-      setItems((prev) =>
-        prev.map(item => item.id === itemId ? { ...item, ...updatedItemData } : item)
-      );
-  
-      console.log('✏️ Item updated:', itemId);
-    } catch (err) {
-      console.error('❌ Failed to update item:', err);
-    }
-  };
-  
-
-  // Move a single item to a different box (or to loose)
-  const moveItemToBox = async (itemId, boxId) => {
-    await updateItem(itemId, { boxId });
-  };
-
-  // Move all items from a deleted box to loose items
-  const moveItemsToLoose = async (boxId) => {
-    const updates = items
-      .filter(item => item.boxId === boxId)
-      .map(item => updateItem(item.id, { boxId: null }));
-    await Promise.all(updates);
-  };
-
-  const looseItems = items.filter(item => item.boxId === null);
-
-  return (
-    <ItemContext.Provider
-      value={{
-        items,
-        looseItems,
-        addItem,
-        deleteItem,
-        updateItem,
-        moveItemToBox,
-        moveItemsToLoose,
-      }}
-    >
-      {children}
-    </ItemContext.Provider>
-  );
-};
-
+  const moveItemToBox = (id, boxId) => updateItem(id, { boxId });
+  return <ItemContext.Provider value={{ items, looseItems: items.filter(item => !item.boxId), addItem,
+    updateItem, deleteItem, moveItemToBox, loading: state.key !== key || state.loading,
+    error: state.key === key ? state.error : '' }}>{children}</ItemContext.Provider>;
+}
 export const useItemContext = () => useContext(ItemContext);
-

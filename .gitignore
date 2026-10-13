@@ -7,6 +7,13 @@
 
 # testing
 /coverage
+/work
+firebase-debug.log*
+firestore-debug.log*
+storage-debug.log*
+ui-debug.log*
+/firepit-log.txt
+/firebase.test.json
 
 # production
 /build

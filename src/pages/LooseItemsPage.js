@@ -2,142 +2,25 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useItemContext } from '../context/ItemContext';
 import { useBoxContext } from '../context/BoxContext';
+import ItemForm from '../components/ItemForm';
 import ItemList from '../components/ItemList';
 import '../styles/LooseItemsPage.css';
-import BugReportModal from '../components/BugReportModal';
-
-
-const LooseItemsPage = () => {
-  const { looseItems, deleteItem, updateItem, addItem, moveItemToBox } = useItemContext();
-
-  const { boxes, addItemToBox } = useBoxContext();
-  const [showBugModal, setShowBugModal] = useState(false);
-
-
-  const [searchTerm, setSearchTerm] = useState('');
-  const [editingIndex, setEditingIndex] = useState(null);
-  const [editedItem, setEditedItem] = useState(null);
-  const [newItem, setNewItem] = useState({ name: '', quantity: '', description: '', photo: null });
-  const [showAddForm, setShowAddForm] = useState(false);
-
-  const handleDelete = (item) => deleteItem(item.id);
-  const handleEdit = (item) => updateItem(item.id, item);
-  const handleMoveToBox = (itemId, boxId) => {
-    const item = looseItems.find((i) => i.id === itemId);
-    if (!item) return;
-    addItemToBox(boxId, item);
-    moveItemToBox(itemId, boxId);
-  };
-  
-
-  const handleAddLooseItem = () => {
-    if (!newItem.name.trim()) return;
-    addItem({
-      ...newItem,
-      quantity: parseInt(newItem.quantity) || 1,
-      boxId: null,
-    });
-    setNewItem({ name: '', quantity: '', description: '', photo: null });
-    setShowAddForm(false);
-  };
-
-  const filteredItems = looseItems.filter((item) =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
-  return (
-    
-    <div className="loose-items-container">
-      
-      <Link to="/" className="back-button">🏠 Back to Home</Link>
-      
-
-      <h1 className="page-title">🧩 Loose Items</h1>
-
-      <button
-        className="toggle-form-btn"
-        onClick={() => setShowAddForm(prev => !prev)}
-      >
-        {showAddForm ? '➖ Cancel' : '➕ Add New Item'}
-        
-      </button>
-     
-
-      {showAddForm && (
-        <div className="add-form">
-          <h1 className="form-title">📦 Add Loose Item</h1>
-          <input
-            type="text"
-            placeholder="Item Name"
-            value={newItem.name}
-            onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-          />
-          <input
-            type="number"
-            placeholder="How many"
-            value={newItem.quantity}
-            onChange={(e) => setNewItem({ ...newItem, quantity: e.target.value })}
-          />
-          <input
-            type="text"
-            placeholder="Description"
-            value={newItem.description}
-            onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
-          />
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              const file = e.target.files[0];
-              if (file) {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                  setNewItem({ ...newItem, photo: reader.result });
-                };
-                reader.readAsDataURL(file);
-              }
-            }}
-          />
-          {newItem.photo && (
-            <div className="photo-preview">
-              <img src={newItem.photo} alt="Preview" />
-            </div>
-          )}
-          <button onClick={handleAddLooseItem} className="save-btn">✅ Save Item</button>
-        </div>
-      )}
-
-      <input
-        className="search-bar"
-        type="text"
-        placeholder="Search items..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
-
-      <ItemList
-        items={filteredItems}
-        onDelete={handleDelete}
-        onEdit={(item) => {
-          setEditingIndex(item.id);
-          setEditedItem(item);
-        }}
-        onMoveToBox={handleMoveToBox}
-        onSaveEdit={handleEdit}
-        availableBoxes={boxes}
-        editingIndex={editingIndex}
-        setEditingIndex={setEditingIndex}
-        editedItem={editedItem}
-        setEditedItem={setEditedItem}
-      />
-      <Link to="/lost-found" className="floating-lost-found">
-      🧳 Lost & Found
-    </Link>
-    </div>
-    
-  );
-  
-};
-
-export default LooseItemsPage;
+export default function LooseItemsPage() {
+  const { looseItems, deleteItem, updateItem, addItem, moveItemToBox, loading, error } = useItemContext();
+  const { boxes } = useBoxContext();
+  const [search, setSearch] = useState(''), [editingIndex, setEditingIndex] = useState(null);
+  const [editedItem, setEditedItem] = useState(null), [adding, setAdding] = useState(false);
+  const filtered = looseItems.filter(item => (item.name + ' ' + (item.description || '')).toLowerCase().includes(search.toLowerCase()));
+  return <main className="page-container">
+    <Link to="/" className="back-button">Back to inventory</Link><h1>Loose items</h1>
+    <p>Items that aren't assigned to a box yet.</p>
+    <button onClick={() => setAdding(!adding)}>{adding ? 'Cancel' : 'Add item'}</button>
+    {adding && <ItemForm onSubmit={async item => { await addItem({ ...item, boxId: null }); setAdding(false); }} />}
+    <label className="search-label">Search loose items<input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Name or description" /></label>
+    {loading ? <p role="status">Loading items…</p> : error ? <p role="alert">{error}</p> :
+      <ItemList items={filtered} onDelete={item => deleteItem(item.id)} onEdit={item => { setEditingIndex(item.id); setEditedItem(item); }}
+        onSaveEdit={item => updateItem(item.id, item)} onMoveToBox={moveItemToBox} availableBoxes={boxes}
+        editingIndex={editingIndex} setEditingIndex={setEditingIndex} editedItem={editedItem} setEditedItem={setEditedItem} />}
+    <Link to="/lost-found">Find items with a missing box</Link>
+  </main>;
+}

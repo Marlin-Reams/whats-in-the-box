@@ -1,155 +1,45 @@
-// src/pages/AllBoxesPage.js
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useBoxContext } from '../context/BoxContext';
 import { useItemContext } from '../context/ItemContext';
-import '../styles/AllBoxesPage.css';
-
-const AllBoxesPage = () => {
-  const { boxes, updateBox, deleteBox } = useBoxContext();
-  const { items, moveItemsToLoose } = useItemContext();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [editingBoxId, setEditingBoxId] = useState(null);
-  const [editedData, setEditedData] = useState({ title: '', notes: '' });
-
-  const filteredBoxes = boxes.filter((box) => {
-    const boxMatches = box.title.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const boxItems = items.filter(item => item.boxId === box.id);
-    const itemMatches = boxItems.some(item =>
-      item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.description?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    return boxMatches || itemMatches;
-  });
-
-  const handleEdit = (box) => {
-    setEditingBoxId(box.id);
-    setEditedData({ title: box.title, notes: box.notes || '' });
-  };
-
-  const handleSave = (boxId) => {
-    updateBox(boxId, editedData);
-    setEditingBoxId(null);
-    setEditedData({ title: '', notes: '' });
-  };
-
-  const handleDelete = (boxId) => {
-    if (window.confirm("Are you sure you want to delete this box?")) {
-      deleteBox(boxId, moveItemsToLoose);
-    }
-  };
-
-  return (
-    <div className="page-container">
-      <div className="page-header-wrapper">
-        <Link to="/" className="back-button">🏠 Back to Home</Link>
-        <h1 className="page-title">📦 All Boxes</h1>
-      </div>
-
-      <input
-        type="text"
-        className="search-bar"
-        placeholder="Search boxes or items..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
-
-      {filteredBoxes.length === 0 ? (
-        <p>No boxes found.</p>
-      ) : (
-        <div className="boxes-grid">
-          {filteredBoxes.map((box) => {
-            const matchingItems = items
-              .filter(item => item.boxId === box.id)
-              .filter(item =>
-                item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                item.description?.toLowerCase().includes(searchTerm.toLowerCase())
-              );
-
-            return (
-              <div key={box.id} className="box-card">
-                {editingBoxId === box.id ? (
-                  <>
-                    <input
-                      type="text"
-                      value={editedData.title}
-                      onChange={(e) =>
-                        setEditedData((prev) => ({ ...prev, title: e.target.value }))
-                      }
-                      placeholder="Box Title"
-                      className="box-edit-input"
-                    />
-                    <input
-                      type="text"
-                      value={editedData.notes}
-                      onChange={(e) =>
-                        setEditedData((prev) => ({ ...prev, notes: e.target.value }))
-                      }
-                      placeholder="Notes"
-                      className="box-edit-input"
-                    />
-                    <div className="box-actions">
-                      <button onClick={() => handleSave(box.id)}>💾 Save</button>
-                      <button onClick={() => setEditingBoxId(null)}>❌ Cancel</button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="box-title">{box.title}</div>
-                    {box.notes && <div className="box-notes">{box.notes}</div>}
-
-                    <div>
-                      <Link className="box-action-button open" to={`/view/${box.id}`}>
-                        <span>📂</span> Open
-                      </Link>
-                      <button
-                        className="box-action-button edit"
-                        onClick={() => handleEdit(box)}
-                      >
-                        <span>✏️ Edit</span>
-                      </button>
-                      <button
-                        className="box-action-button delete"
-                        onClick={() => handleDelete(box.id)}
-                      >
-                        <span>🗑️ Delete</span>
-                      </button>
-                    </div>
-
-                    {searchTerm && matchingItems.length > 0 && (
-  <div className="matching-items">
-    <strong>Matching Items:</strong>
-    <div className="matching-items-grid">
-      {matchingItems.map(item => (
-        <div key={item.id} className="matching-item-card">
-          
-
-          {item.photo && (
-  <img
-    src={item.photo}
-    alt={item.name}
-    className="matching-item-thumbnail"
-  />
-)}
-
-          <div className="matching-item-name">{item.name}</div>
-        </div>
-      ))}
-    </div>
-  </div>
-)}
-                  </>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default AllBoxesPage;
+import ItemPhoto from '../components/ItemPhoto';
+export default function AllBoxesPage() {
+  const { boxes, updateBox, deleteBox, loading, error } = useBoxContext(), { items } = useItemContext();
+  const [search, setSearch] = useState(''), [editing, setEditing] = useState(null), [data, setData] = useState({});
+  const [busy, setBusy] = useState(false), [failure, setFailure] = useState('');
+  async function act(task) {
+    if (busy) return; setBusy(true); setFailure('');
+    try { await task(); } catch (err) { setFailure(err.message || 'Could not save that change. Please try again.'); }
+    finally { setBusy(false); }
+  }
+  const term = search.trim().toLowerCase();
+  const matches = value => (value || '').toLowerCase().includes(term);
+  const filtered = boxes.filter(box => matches(box.title + ' ' + (box.location || '') + ' ' + (box.notes || '')) ||
+    items.some(item => item.boxId === box.id && matches(item.name + ' ' + (item.description || ''))));
+  return <main className="page-container">
+    <Link to="/" className="back-button">Back to inventory</Link><h1>Your boxes</h1><Link className="primary-link" to="/add-box">Add box</Link>
+    <label className="search-label">Search boxes and their contents<input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Try measuring cups or garage" /></label>
+    {(error || failure) && <p role="alert" className="error-text">{error || failure}</p>}
+    {loading ? <p role="status">Loading boxes…</p> : <div className="boxes-grid">
+      {!filtered.length && <p className="empty-state">{boxes.length ? 'No matching boxes. Try another search.' : 'Your first box starts here. Add a box and give it a location.'}</p>}
+      {filtered.map(box => <article key={box.id} className="box-card">
+        {editing === box.id ? <form onSubmit={e => { e.preventDefault(); act(async () => { await updateBox(box.id, data); setEditing(null); }); }}>
+          <fieldset disabled={busy}><label>Box name<input required maxLength={120} value={data.title} onChange={e => setData({ ...data, title: e.target.value })} /></label>
+            <label>Location<input maxLength={200} value={data.location} onChange={e => setData({ ...data, location: e.target.value })} /></label>
+            <label>Notes<textarea maxLength={2000} value={data.notes} onChange={e => setData({ ...data, notes: e.target.value })} /></label></fieldset>
+          <button disabled={busy}>{busy ? 'Saving…' : 'Save changes'}</button><button type="button" disabled={busy} onClick={() => setEditing(null)}>Cancel</button>
+        </form> : <>
+          <h2>{box.title}</h2><p className="location">{box.location || 'Location not set'}</p><p>{box.notes}</p>
+          <p>{items.filter(item => item.boxId === box.id).length} items</p>
+          <div className="action-buttons"><Link className="primary-link" to={'/view/' + box.id}>Open box</Link>
+            <button disabled={busy} onClick={() => { setEditing(box.id); setData({ title: box.title, notes: box.notes || '', location: box.location || '' }); }}>Edit</button>
+            <button disabled={busy} className="delete" onClick={() => {
+              if (window.confirm('Delete “' + box.title + '”? Its items will move to loose items.')) act(() => deleteBox(box.id));
+            }}>Delete</button></div>
+          {term && <ul className="search-results">{items.filter(item => item.boxId === box.id && matches(item.name + ' ' + (item.description || ''))).map(item =>
+            <li key={item.id}><ItemPhoto item={item} /><span>{item.name} · {item.quantity}</span></li>)}</ul>}
+        </>}
+      </article>)}
+    </div>}
+  </main>;
+}

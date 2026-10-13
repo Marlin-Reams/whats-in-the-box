@@ -1,235 +1,32 @@
-// import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
-// import { saveBoxes, loadBoxes } from '../services/localStorageService';
-
-
-// // ...imports
-// const BoxContext = createContext();
-
-// export const BoxProvider = ({ children }) => {
-//   const [boxes, setBoxes] = useState(() => {
-//     const stored = loadBoxes();
-//     return stored;
-//   });
-
-//   const isFirstMount = useRef(true);
-
-//   useEffect(() => {
-//     if (isFirstMount.current) {
-//       isFirstMount.current = false;
-//       return;
-//     }
-//     saveBoxes(boxes);
-//   }, [boxes]);
-
-//   const addBox = (box) => {
-//     setBoxes((prev) => [...prev, box]);
-//   };
-
-//   const addItemToBox = (boxId, newItem) => {
-//     setBoxes((prev) =>
-//       prev.map((box) =>
-//         box.id === boxId
-//           ? { ...box, items: [...box.items, newItem] }
-//           : box
-//       )
-//     );
-//   };
-
-//   const removeItemFromBox = (boxId, itemIndex) => {
-//     setBoxes((prev) =>
-//       prev.map((box) =>
-//         box.id === boxId
-//           ? {
-//               ...box,
-//               items: box.items.filter((_, idx) => idx !== itemIndex),
-//             }
-//           : box
-//       )
-//     );
-//   };
-
-//   const updateBox = (boxId, updatedBox) => {
-//     setBoxes((prev) =>
-//       prev.map((b) => (b.id === boxId ? { ...b, ...updatedBox } : b))
-//     );
-//   };
-
-//   const getBoxById = (boxId) => {
-//     return boxes.find((b) => b.id === boxId);
-//   };
-
-//   const deleteBox = (boxId, moveItemsToLoose) => {
-//     const boxToDelete = boxes.find((box) => box.id === boxId);
-
-//     if (boxToDelete && typeof moveItemsToLoose === 'function') {
-//       moveItemsToLoose(boxId); // ✅ This must be called from outside BoxContext
-//     }
-
-//     const updated = boxes.filter((box) => box.id !== boxId);
-//     setBoxes(updated);
-//   };
-
-//   return (
-//     <BoxContext.Provider value={{
-//       boxes,
-//       addBox,
-//       updateBox,
-//       getBoxById,
-//       addItemToBox,
-//       removeItemFromBox,
-//       deleteBox
-//     }}>
-//       {children}
-//     </BoxContext.Provider>
-//   );
-// };
-
-// export const useBoxContext = () => useContext(BoxContext);
-
-import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import {
-  addBoxToFirestore,
-  fetchBoxesFromFirestore,
-  updateBoxInFirestore,
-  deleteBoxFromFirestore
-} from '../firebase/firestoreHelpers';
-
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useInventoryScope } from './InventoryScope';
+import { subscribeInventory, createInventory, updateInventory, deleteBoxWithItems } from '../firebase/inventoryService';
+import { validateBox } from '../utils/inventory';
 const BoxContext = createContext();
-
-export const BoxProvider = ({ children }) => {
-  const [boxes, setBoxes] = useState([]);
-  const isFirstMount = useRef(true);
-
+export function BoxProvider({ children }) {
+  const { scope } = useInventoryScope();
+  const key = scope ? scope.userId + ':' + (scope.familyId || '') : '';
+  const [state, setState] = useState({ key: '', boxes: [], loading: false, error: '' });
   useEffect(() => {
-    const auth = getAuth();
-  
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        try {
-          const cloudBoxes = await fetchBoxesFromFirestore();
-          setBoxes(cloudBoxes);
-          console.log("✅ Synced boxes from Firestore:", cloudBoxes);
-          console.log('✅ Boxes loaded:', cloudBoxes);
-        } catch (err) {
-          console.error("❌ Failed to load boxes from Firestore:", err);
-        }
-      } else {
-        console.warn("⚠️ User not logged in. Skipping box fetch.");
-      }
-    });
-  
-    return () => unsubscribe();
-  }, []);
-
-  const addBox = async (box) => {
-    try {
-      const auth = getAuth();
-      const user = auth.currentUser;
-  
-      if (!user) throw new Error("User not authenticated");
-  
-      const boxWithUser = {
-        ...box,
-        userId: user.uid,
-        createdAt: new Date().toISOString(),
-        items: box.items || []
-      };
-  
-      const id = await addBoxToFirestore(boxWithUser);
-      const newBox = { ...boxWithUser, id };
-      setBoxes((prev) => [...prev, newBox]);
-      console.log("✅ Box added:", newBox);
-    } catch (err) {
-      console.error("❌ Failed to add box:", err);
-    }
+    let active = true;
+    setState({ key, boxes: [], loading: !!scope, error: '' });
+    if (!scope) return;
+    const stop = subscribeInventory(scope, 'boxes', boxes => {
+      if (active) setState({ key, boxes, loading: false, error: '' });
+    }, () => { if (active) setState({ key, boxes: [], loading: false, error: 'Could not load boxes. Check your connection and try again.' }); });
+    return () => { active = false; stop(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+  const boxes = state.key === key ? state.boxes : [];
+  const getBoxById = id => boxes.find(box => box.id === id || box.legacyId === id);
+  const addBox = box => createInventory(scope, 'boxes', validateBox(box));
+  const updateBox = (id, data) => updateInventory(scope, 'boxes', id, validateBox(data));
+  const deleteBox = id => {
+    const box = getBoxById(id);
+    if (!box) throw new Error('Box not found.');
+    return deleteBoxWithItems(scope, box);
   };
-
-  const updateBox = async (boxId, updatedBox) => {
-    try {
-      const boxToUpdate = boxes.find((b) => b.id === boxId);
-      if (!boxToUpdate) throw new Error("Box not found");
-  
-      const completeUpdate = {
-        ...boxToUpdate,
-        ...updatedBox, // overwrite title, notes, etc.
-        userId: boxToUpdate.userId // ✅ ensure userId is preserved
-      };
-  
-      await updateBoxInFirestore(boxId, completeUpdate);
-  
-      setBoxes((prev) =>
-        prev.map((b) => (b.id === boxId ? { ...b, ...completeUpdate } : b))
-      );
-  
-      console.log("✅ Box updated:", boxId);
-    } catch (err) {
-      console.error("❌ Failed to update box:", err);
-    }
-  };
-  
-
-  const deleteBox = async (boxId, moveItemsToLoose) => {
-    try {
-      await deleteBoxFromFirestore(boxId);
-      if (typeof moveItemsToLoose === 'function') {
-        moveItemsToLoose(boxId);
-      }
-      setBoxes((prev) => prev.filter((box) => box.id !== boxId));
-      console.log("✅ Box deleted:", boxId);
-    } catch (err) {
-      console.error("❌ Failed to delete box:", err);
-    }
-  };
-
-  const getBoxById = (boxId) => {
-    return boxes.find((b) => b.id === boxId);
-  };
-
-  const addItemToBox = (boxId, newItem) => {
-    setBoxes((prev) =>
-      prev.map((box) =>
-        box.id === boxId
-          ? { ...box, items: [...box.items, newItem] }
-          : box
-      )
-    );
-  };
-
-  const removeItemFromBox = (boxId, itemIndex) => {
-    setBoxes((prev) =>
-      prev.map((box) =>
-        box.id === boxId
-          ? {
-              ...box,
-              items: box.items.filter((_, idx) => idx !== itemIndex),
-            }
-          : box
-      )
-    );
-  };
-
-  return (
-    <BoxContext.Provider
-      value={{
-        boxes,
-        addBox,
-        updateBox,
-        getBoxById,
-        addItemToBox,
-        removeItemFromBox,
-        deleteBox
-      }}
-    >
-      {children}
-    </BoxContext.Provider>
-  );
-};
-
+  return <BoxContext.Provider value={{ boxes, getBoxById, addBox, updateBox, deleteBox,
+    loading: state.key !== key || state.loading, error: state.key === key ? state.error : '' }}>{children}</BoxContext.Provider>;
+}
 export const useBoxContext = () => useContext(BoxContext);
-
-
-
-
-
-

@@ -1,65 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { getAuth, signOut, onAuthStateChanged } from 'firebase/auth';
+import React, { useState } from 'react';
+import { Link, NavLink } from 'react-router-dom';
+import { signOut, getAuth } from 'firebase/auth';
 import BugReportModal from './BugReportModal';
-import { useNavigate } from 'react-router-dom';
-import '../styles/TopBar.css'; // You can rename this to TopBar.css later if you’d like
-
-const allowedAdminUIDs = [
-  process.env.REACT_APP_ADMIN_UID_1,
-  process.env.REACT_APP_ADMIN_UID_2
-];
-
-const TopBar = () => {
-  const [showBugModal, setShowBugModal] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user && allowedAdminUIDs.includes(user.uid)) {
-        setIsAdmin(true);
-      } else {
-        setIsAdmin(false);
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  const handleLogout = async () => {
-    try {
-      await signOut(getAuth());
-      console.log('🔒 Logged out');
-    } catch (err) {
-      console.error('❌ Logout failed:', err);
-    }
-  };
-
-  return (
-    <>
-      <div className="logout-bar">
-        <button className="bug-report-button" onClick={() => setShowBugModal(true)}>
-          Help Request
-        </button>
-
-        {isAdmin && (
-          <button className="admin-button" onClick={() => navigate('/admin-console')}>
-            Admin Console
-          </button>
-        )}
-
-        <button onClick={handleLogout} className="logout-button">
-          Log Out
-        </button>
-      </div>
-
-      {showBugModal && <BugReportModal onClose={() => setShowBugModal(false)} />}
-    </>
-  );
-};
-
-export default TopBar;
-
-
-
+import { useInventoryScope, familiesEnabled } from '../context/InventoryScope';
+import '../styles/TopBar.css';
+export default function TopBar() {
+  const { user, familyId, families, setFamilyId } = useInventoryScope();
+  const [help, setHelp] = useState(false), [error, setError] = useState('');
+  const admin = [process.env.REACT_APP_ADMIN_UID_1, process.env.REACT_APP_ADMIN_UID_2].filter(Boolean).includes(user?.uid);
+  return <header className="app-header"><div className="brand-row"><Link to="/" className="brand">What's in the Box <span aria-hidden="true">📦</span></Link>
+    <div className="account-actions"><button onClick={() => setHelp(true)}>Help</button>
+      {admin && <Link to="/admin-console">Admin</Link>}<button onClick={async () => { try { await signOut(getAuth()); } catch { setError('Could not sign out. Try again.'); } }}>Sign out</button></div></div>
+    <nav aria-label="Inventory"><NavLink to="/" end>Overview</NavLink><NavLink to="/boxes">Boxes</NavLink><NavLink to="/loose-items">Loose items</NavLink><NavLink to="/scan">Scan</NavLink>
+      {familiesEnabled && <NavLink to="/family">Family</NavLink>}</nav>
+    {familiesEnabled && <label className="scope-selector">Inventory<select value={familyId || ''} onChange={e => setFamilyId(e.target.value || null)}>
+      <option value="">Personal</option>{families.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}</select></label>}
+    {error && <p role="alert">{error}</p>}{help && <BugReportModal onClose={() => setHelp(false)} />}</header>;
+}

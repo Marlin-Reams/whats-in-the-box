@@ -1,76 +1,30 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { addDoc, collection } from 'firebase/firestore';
 import { db } from '../firebase/firebaseConfig';
 import { getAuth } from 'firebase/auth';
-import { toast } from 'react-toastify';
-import '../styles/BugReportModal.css';
-
-const BugReportModal = ({ onClose }) => {
-  const [description, setDescription] = useState('');
-  const [type, setType] = useState('bug');
-  const [submitted, setSubmitted] = useState(false);
-  const user = getAuth().currentUser;
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await addDoc(collection(db, 'requests'), {
-        type,
-        description,
-        submittedAt: new Date().toISOString(),
-        status: 'submitted',
-        userId: user?.uid || 'anonymous'
-      });
-
-      toast.success("Request submitted!");
-      setSubmitted(true);
-      setDescription('');
-
-      setTimeout(() => {
-        onClose();
-      }, 1500);
-
-    } catch (err) {
-      console.error('❌ Failed to submit request:', err);
-      toast.error("Failed to submit request.");
-    }
-  };
-
-  return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <div className="modal-header">
-          <div className="modal-title">
-            {type === 'bug' && '🐞'}
-            {type === 'feature' && '💡'}
-            {type === 'support' && '🛠️'}
-            <span> Submit a {type.charAt(0).toUpperCase() + type.slice(1)} Request</span>
-          </div>
-          <button className="modal-close" onClick={onClose}>✖</button>
-        </div>
-
-        <div className="type-selector">
-          <label htmlFor="type">Request Type:</label>
-          <select id="type" value={type} onChange={(e) => setType(e.target.value)}>
-            <option value="bug">Bug</option>
-            <option value="feature">Feature</option>
-            <option value="support">Support</option>
-          </select>
-        </div>
-
-        <textarea
-          className="bug-textarea"
-          placeholder="Describe your request in detail..."
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-
-        <button className="submit-button" onClick={handleSubmit}>
-          📝 Submit
-        </button>
-      </div>
-    </div>
-  );
-};
-
-export default BugReportModal;
+export default function BugReportModal({ onClose }) {
+  const [type, setType] = useState('bug'), [description, setDescription] = useState('');
+  const [busy, setBusy] = useState(false), [error, setError] = useState(''), [sent, setSent] = useState(false);
+  const dialog = useRef(null);
+  useEffect(() => {
+    const previous = document.activeElement;
+    dialog.current?.showModal();
+    return () => { if (previous instanceof HTMLElement) previous.focus(); };
+  }, []);
+  return <dialog ref={dialog} className="help-dialog" onCancel={e => { e.preventDefault(); if (!busy) onClose(); }} aria-labelledby="help-title">
+    <h2 id="help-title">How can we help?</h2>
+    {sent ? <p role="status">Your request was submitted. Thank you.</p> : <form onSubmit={async e => {
+      e.preventDefault(); if (busy || !description.trim()) return; setBusy(true); setError('');
+      try {
+        const user = getAuth().currentUser;
+        if (!user) throw new Error('Please sign in again.');
+        await addDoc(collection(db, 'requests'), { type, description: description.trim(), userId: user.uid, status: 'submitted', submittedAt: new Date().toISOString() });
+        setSent(true);
+      } catch { setError('Your request could not be submitted. Your text is still here.'); } finally { setBusy(false); }
+    }}>
+      <fieldset disabled={busy}><label>Request type<select value={type} onChange={e => setType(e.target.value)}><option value="bug">Something is broken</option><option value="feature">An idea for the app</option><option value="support">I need help</option></select></label>
+      <label>Description<textarea autoFocus required maxLength={4000} rows={5} value={description} onChange={e => setDescription(e.target.value)} /></label></fieldset>
+      {error && <p role="alert">{error}</p>}<button disabled={busy}>{busy ? 'Submitting…' : 'Submit request'}</button>
+    </form>}<button disabled={busy} onClick={onClose}>Close</button>
+  </dialog>;
+}
