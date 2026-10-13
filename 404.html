@@ -1,9 +1,0 @@
-<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>Opening your box</title></head>
-<body><p>Opening your inventory…</p><script>
-  const prefix = '/whats-in-the-box';
-  if (location.pathname.startsWith(prefix + '/')) {
-    const route = location.pathname.slice(prefix.length) + location.search;
-    location.replace(prefix + '/#' + route);
-  }
-</script><a href="/whats-in-the-box/">Back to inventory</a></body></html>
