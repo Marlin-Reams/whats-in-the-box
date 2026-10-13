@@ -39,8 +39,8 @@ export default function ItemForm({ onSubmit, buttonLabel = 'Save item', initialI
       <label>Quantity<input type="number" min="1" max="100000" step="1" value={item.quantity} onChange={e => change('quantity', e.target.value)} required /></label>
       <label>Description<textarea value={item.description || ''} onChange={e => change('description', e.target.value)} maxLength={2000} rows={3} /></label>
       <p>Photo (optional)</p>
-      <input hidden type="file" accept="image/*" capture="environment" onChange={upload} ref={cameraRef} />
-      <input hidden type="file" accept="image/*" onChange={upload} ref={fileRef} />
+      <input hidden style={{ display: 'none' }} type="file" accept="image/*" capture="environment" onChange={upload} ref={cameraRef} />
+      <input hidden style={{ display: 'none' }} type="file" accept="image/*" onChange={upload} ref={fileRef} />
       <div className="action-buttons">
         <button type="button" onClick={() => { cameraRef.current.value = ''; cameraRef.current.click(); }}>Take photo</button>
         <button type="button" onClick={() => { fileRef.current.value = ''; fileRef.current.click(); }}>Choose existing photo</button>
