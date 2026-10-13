@@ -1,60 +1,13 @@
-// // src/pages/ScanQRPage.js
-// import React from 'react';
-// import { Link } from 'react-router-dom';
-// import QrScanner from '../components/QrScanner';
-// import '../styles/QrScanner.css';
-
-// const ScanQRPage = () => {
-//   const handleScanSuccess = (decodedText) => {
-//     window.location.href = decodedText;
-//   };
-
-//   const handleScanError = (error) => {
-//     console.warn('Scan error:', error);
-//   };
-
-//   return (
-//     <div className="qr-page-wrapper">
-//       <Link to="/" className="back-button">🏠 Back to Home</Link>
-//       <h1 className="qr-title">📸 Scan a Box QR Code</h1>
-
-//       <div className="qr-scanner-wrapper">
-//         <QrScanner onScanSuccess={handleScanSuccess} onScanError={handleScanError} />
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default ScanQRPage;
-
-// src/pages/ScanPage.jsx
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import QrScanner from '../components/QrScanner';
-import '../styles/ScanPage.css';
-
-const ScanPage = () => {
-  const navigate = useNavigate();
-
-  const handleScanSuccess = (decodedText) => {
-    try {
-      const url = new URL(decodedText);
-      navigate(url.pathname); // Extracts and uses only the "/view/..." part
-    } catch (error) {
-      console.error("Invalid QR code format", error);
-      alert("Scanned QR code is not a valid box link.");
-    }
-  };
-
-  return (
-    <div className="scan-page-container">
-      <h2>📦 Scan a Box QR Code</h2>
-      <div className="scanner-wrapper">
-        <QrScanner onScanSuccess={handleScanSuccess} />
-      </div>
-    </div>
-  );
-};
-
-export default ScanPage;
-
+import { parseBoxLink } from '../utils/inventory';
+export default function ScanPage() {
+  const navigate = useNavigate(), [error, setError] = useState(''), [link, setLink] = useState('');
+  const scan = text => { try { const route = parseBoxLink(text); setError(''); navigate(route); } catch (failure) { setError(failure.message); } };
+  return <main className="page-container"><Link to="/" className="back-button">Back to inventory</Link><h1>Scan a box label</h1>
+    <p>Point your camera at a label to see what’s inside.</p><QrScanner onScanSuccess={scan} />
+    {error && <p role="alert">{error}</p>}
+    <form onSubmit={e => { e.preventDefault(); scan(link); }}><label>Or paste a box link<input value={link} onChange={e => setLink(e.target.value)} required /></label><button>Open box</button></form>
+    <Link to="/boxes">Find a box by name</Link></main>;
+}

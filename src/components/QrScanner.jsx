@@ -1,101 +1,34 @@
-// // src/components/QrScanner.js
-// import React, { useRef, useState } from 'react';
-// import { Html5QrcodeScanner } from 'html5-qrcode';
-// import '../styles/QrScanner.css';
-
-// const QrScanner = ({ onScanSuccess, onScanError }) => {
-//   const scannerRef = useRef(null);
-//   const [scannerStarted, setScannerStarted] = useState(false);
-//   const containerId = 'qr-reader';
-
-//   const startScanner = () => {
-//     if (!scannerRef.current) {
-//       const scanner = new Html5QrcodeScanner(containerId, {
-//         fps: 10,
-//         qrbox: 250
-//       });
-
-//       scanner.render(onScanSuccess, onScanError);
-//       scannerRef.current = scanner;
-//       setScannerStarted(true);
-//     }
-//   };
-
-//   return (
-//     <div>
-//       {!scannerStarted && (
-//         <button className="green-btn" onClick={startScanner}>
-//           📷 Start Scanning
-//         </button>
-//       )}
-//       <div id={containerId} style={{ width: '100%', marginTop: '1rem' }} />
-//     </div>
-//   );
-// };
-
-// export default QrScanner;
-
-// src/components/QrScanner.jsx
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
-import '../styles/QrScanner.css'; // ✅ Make sure this is created
-
-const QrScanner = ({ onScanSuccess }) => {
-  const qrCodeRegionId = 'html5qr-code-full-region';
-  const html5QrCodeRef = useRef(null);
-
+// Camera lifecycles are serialized, including slow permission/startup promises.
+let cameraQueue = Promise.resolve();
+export default function QrScanner({ onScanSuccess }) {
+  const [enabled, setEnabled] = useState(false), [error, setError] = useState('');
+  const callback = useRef(onScanSuccess);
+  callback.current = onScanSuccess;
   useEffect(() => {
-    html5QrCodeRef.current = new Html5Qrcode(qrCodeRegionId);
-    let isScannerRunning = false;
-  
-    Html5Qrcode.getCameras()
-      .then(devices => {
-        if (devices.length) {
-          // Try to find a back-facing camera
-          const backCamera = devices.find(device =>
-            device.label.toLowerCase().includes('back')
-          );
-  
-          const selectedDeviceId = backCamera ? backCamera.id : devices[0].id;
-  
-          html5QrCodeRef.current
-            .start(
-              selectedDeviceId,
-              { fps: 10, qrbox: { width: 250, height: 250 } },
-              (decodedText) => {
-                onScanSuccess(decodedText);
-                html5QrCodeRef.current.stop().then(() => {
-                  isScannerRunning = false;
-                }).catch(console.warn);
-              },
-              (error) => {
-                // Optional: handle scan errors here
-              }
-            )
-            .then(() => {
-              isScannerRunning = true;
-            })
-            .catch(console.error);
-        }
-      })
-      .catch(console.error);
-  
-    return () => {
-      if (html5QrCodeRef.current && isScannerRunning) {
-        html5QrCodeRef.current
-          .stop()
-          .catch((err) => console.warn("Scanner stop failed:", err));
+    if (!enabled) return;
+    let disposed = false, decoded = false, finish;
+    const stopped = new Promise(resolve => { finish = resolve; });
+    cameraQueue = cameraQueue.catch(() => {}).then(async () => {
+      if (disposed) return;
+      const scanner = new Html5Qrcode('box-qr-reader');
+      try {
+        await scanner.start({ facingMode: 'environment' }, { fps: 10, qrbox: { width: 220, height: 220 } }, text => {
+          if (disposed || decoded) return;
+          decoded = true; callback.current(text); setEnabled(false);
+        }, () => {});
+        if (!disposed) await stopped;
+      } catch {
+        if (!disposed) { setError('Camera unavailable. Check camera permission, or use manual lookup below.'); setEnabled(false); }
+      } finally {
+        try { if (scanner.isScanning) await scanner.stop(); scanner.clear(); } catch { /* A failed camera start may already be cleared. */ }
       }
-    };
-  }, [onScanSuccess]);
-
-  return (
-    <div className="qr-scanner-wrapper">
-      <h3>📦 Scan Box QR Code</h3>
-      <div id={qrCodeRegionId} />
-    </div>
-  );
-};
-
-export default QrScanner;
-
+    });
+    return () => { disposed = true; finish(); };
+  }, [enabled]);
+  return <section className="scanner"><div id="box-qr-reader" />
+    {error && <p role="alert">{error}</p>}
+    <button onClick={() => { setError(''); setEnabled(!enabled); }}>{enabled ? 'Stop camera' : 'Start camera'}</button>
+  </section>;
+}

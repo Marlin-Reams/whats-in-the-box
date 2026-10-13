@@ -1,153 +1,46 @@
-// import React, { useState, useRef } from 'react';
-
-// const ItemForm = ({
-//   onSubmit,
-//   buttonLabel = 'Add Item',
-//   initialItem = { name: '', quantity: 1, description: '', photo: null },
-// }) => {
-//   const [item, setItem] = useState(initialItem);
-//   const fileInputRef = useRef(null);
-
-//   const handleImageUpload = (e) => {
-//     const file = e.target.files[0];
-//     if (!file) return;
-//     const reader = new FileReader();
-//     reader.onloadend = () => {
-//       setItem((prev) => ({ ...prev, photo: reader.result }));
-//     };
-//     reader.readAsDataURL(file);
-//   };
-
-//   const handleSubmit = (e) => {
-//     e.preventDefault();
-//     if (!item.name.trim()) return;
-//     onSubmit(item);
-//     setItem({ name: '', quantity: 1, description: '', photo: null });
-//     fileInputRef.current.value = '';
-//   };
-
-//   return (
-    
-//     <form onSubmit={handleSubmit} className="add-loose-item-form">
-//       <input
-//         type="text"
-//         placeholder="Item Name"
-//         value={item.name}
-//         onChange={(e) => setItem({ ...item, name: e.target.value })}
-//         required
-//       />
-//       <input
-//         type="number"
-//         placeholder="Quantity"
-//         min="1"
-//         value={item.quantity}
-//         onChange={(e) => setItem({ ...item, quantity: parseInt(e.target.value) })}
-//       />
-//       <input
-//         type="text"
-//         placeholder="Description"
-//         value={item.description}
-//         onChange={(e) => setItem({ ...item, description: e.target.value })}
-//       />
-//       <input
-//         type="file"
-//         accept="image/*"
-//         onChange={handleImageUpload}
-//         ref={fileInputRef}
-//       />
-//       {item.photo && (
-//         <div className="photo-preview-wrapper">
-//           <img src={item.photo} alt="Preview" className="photo-preview" />
-//         </div>
-//       )}
-//       <button type="submit">{buttonLabel}</button>
-//     </form>
-//   );
-// };
-
-// export default ItemForm;
-import React, { useState, useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import imageCompression from 'browser-image-compression';
-
-const ItemForm = ({
-  onSubmit,
-  buttonLabel = 'Add Item',
-  initialItem = { name: '', quantity: 1, description: '', photo: null },
-}) => {
-  const [item, setItem] = useState(initialItem);
-  const fileInputRef = useRef(null);
-
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
+import { validateItem } from '../utils/inventory';
+import ItemPhoto from './ItemPhoto';
+const empty = { name: '', quantity: 1, description: '', photo: null };
+export default function ItemForm({ onSubmit, buttonLabel = 'Save item', initialItem = empty, resetOnSuccess = true }) {
+  const [item, setItem] = useState(initialItem), [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false), [error, setError] = useState('');
+  const fileRef = useRef(null);
+  const change = (field, value) => setItem(current => ({ ...current, [field]: value }));
+  async function upload(event) {
+    const file = event.target.files?.[0];
     if (!file) return;
-
-    const options = {
-      maxSizeMB: 0.2,
-      maxWidthOrHeight: 800,
-      useWebWorker: true,
-    };
-
-    try {
-      const compressedFile = await imageCompression(file, options);
-      const base64 = await convertToBase64(compressedFile);
-      setItem((prev) => ({ ...prev, photo: base64 }));
-    } catch (error) {
-      console.error('Image compression failed:', error);
+    setError('');
+    if (!file.type.startsWith('image/') || file.size > 10 * 1024 * 1024) {
+      setError('Choose an image under 10 MB.'); event.target.value = ''; return;
     }
-  };
-
-  const convertToBase64 = (file) =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
-    });
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!item.name.trim()) return;
-    onSubmit(item);
-    setItem({ name: '', quantity: 1, description: '', photo: null });
-    fileInputRef.current.value = '';
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="add-loose-item-form">
-      <input
-        type="text"
-        placeholder="Item Name"
-        value={item.name}
-        onChange={(e) => setItem({ ...item, name: e.target.value })}
-        required
-      />
-      <input
-        type="number"
-        placeholder="Quantity"
-        min="1"
-        value={item.quantity}
-        onChange={(e) => setItem({ ...item, quantity: parseInt(e.target.value) })}
-      />
-      <input
-        type="text"
-        placeholder="Description"
-        value={item.description}
-        onChange={(e) => setItem({ ...item, description: e.target.value })}
-      />
-      <input
-        type="file"
-        accept="image/*"
-        onChange={handleImageUpload}
-        ref={fileInputRef}
-      />
-      {item.photo && (
-        <div className="photo-preview-wrapper">
-          <img src={item.photo} alt="Preview" className="photo-preview" />
-        </div>
-      )}
-      <button type="submit">{buttonLabel}</button>
-    </form>
-  );
-};
-
-export default ItemForm;
+    setUploading(true);
+    try {
+      const compressed = await imageCompression(file, { maxSizeMB: 0.25, maxWidthOrHeight: 1200, useWebWorker: true });
+      change('photo', await imageCompression.getDataUrlFromFile(compressed));
+    } catch { setError('The photo could not be prepared. Try another image.'); }
+    finally { setUploading(false); }
+  }
+  async function submit(event) {
+    event.preventDefault();
+    if (saving || uploading) return;
+    setError(''); setSaving(true);
+    try {
+      await onSubmit(validateItem(item));
+      if (resetOnSuccess) { setItem(empty); if (fileRef.current) fileRef.current.value = ''; }
+    } catch (failure) { setError(failure.message || 'Could not save this item. Your changes are still here.'); }
+    finally { setSaving(false); }
+  }
+  return <form onSubmit={submit} className="add-loose-item-form">
+    <fieldset disabled={saving || uploading}>
+      <label>Item name<input value={item.name} onChange={e => change('name', e.target.value)} required maxLength={120} autoFocus /></label>
+      <label>Quantity<input type="number" min="1" max="100000" step="1" value={item.quantity} onChange={e => change('quantity', e.target.value)} required /></label>
+      <label>Description<textarea value={item.description || ''} onChange={e => change('description', e.target.value)} maxLength={2000} rows={3} /></label>
+      <label>Photo (optional)<input type="file" accept="image/*" onChange={upload} ref={fileRef} /></label>
+      <ItemPhoto item={item} />
+    </fieldset>
+    {error && <p role="alert" className="error-text">{error}</p>}
+    <button type="submit" disabled={saving || uploading}>{uploading ? 'Preparing photo…' : saving ? 'Saving…' : buttonLabel}</button>
+  </form>;
+}

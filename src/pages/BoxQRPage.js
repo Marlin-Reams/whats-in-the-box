@@ -1,196 +1,22 @@
-// import React, { useRef, useState } from 'react';
-// import { useBoxContext } from '../context/BoxContext';
-// import { QRCodeSVG } from 'qrcode.react';
-// import { Link } from 'react-router-dom';
-// import '../styles/BoxQRPage.css'; // You'll create this file
-
-// const BoxQRPage = () => {
-//   const { boxes } = useBoxContext();
-//   const [selectedBoxes, setSelectedBoxes] = useState([]);
-//   const qrRefs = useRef({});
-
-//   const handlePrint = () => window.print();
-
-//   const toggleSelection = (boxId) => {
-//     setSelectedBoxes((prev) =>
-//       prev.includes(boxId) ? prev.filter((id) => id !== boxId) : [...prev, boxId]
-//     );
-//   };
-
-//   const handleDownload = (boxId) => {
-//     const svg = qrRefs.current[boxId];
-//     if (!svg) return;
-
-//     const svgData = new XMLSerializer().serializeToString(svg);
-//     const canvas = document.createElement('canvas');
-//     const ctx = canvas.getContext('2d');
-
-//     const img = new Image();
-//     const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-//     const url = URL.createObjectURL(svgBlob);
-
-//     img.onload = () => {
-//       canvas.width = img.width;
-//       canvas.height = img.height;
-//       ctx.drawImage(img, 0, 0);
-//       URL.revokeObjectURL(url);
-
-//       const pngUrl = canvas.toDataURL('image/png');
-//       const downloadLink = document.createElement('a');
-//       downloadLink.href = pngUrl;
-//       downloadLink.download = `${boxId}-qr.png`;
-//       downloadLink.click();
-//     };
-
-//     img.src = url;
-//   };
-
-//   const handlePrintSelected = () => {
-//     const printWindow = window.open('', '_blank');
-//     printWindow.document.write('<html><head><title>Print QR Codes</title></head><body>');
-//     selectedBoxes.forEach((boxId) => {
-//       const svg = qrRefs.current[boxId]?.outerHTML;
-//       const boxTitle = boxes.find((box) => box.id === boxId)?.title;
-//       printWindow.document.write(`<div style="text-align: center; margin: 1rem;">${svg}<p>${boxTitle}</p></div>`);
-//     });
-//     printWindow.document.write('</body></html>');
-//     printWindow.document.close();
-//     printWindow.print();
-//   };
-
-//   return (
-//     <div className="qr-page-wrapper">
-//       <Link to="/" className="back-home-btn">🏠 Back to Home</Link>
-//       <h1 className="form-title">📦 Box QR Codes</h1>
-
-//       <div className="qr-actions">
-//         <button onClick={handlePrint} className="green-btn">🖨️ Print All</button>
-//         <button
-//           onClick={handlePrintSelected}
-//           className={`green-btn ${selectedBoxes.length === 0 ? 'disabled' : ''}`}
-//           disabled={selectedBoxes.length === 0}
-//         >
-//           🖨️ Print Selected
-//         </button>
-//       </div>
-
-//       <div className="qr-grid">
-//         {boxes.map((box) => (
-//           <div
-//             key={box.id}
-//             className={`qr-card ${selectedBoxes.includes(box.id) ? 'selected' : ''}`}
-//           >
-//             <div ref={(el) => (qrRefs.current[box.id] = el)}>
-//               <QRCodeSVG value={`${window.location.origin}/view/${box.id}`} size={200} />
-//             </div>
-//             <p className="qr-title">{box.title}</p>
-//             <label className="qr-select">
-//               <input
-//                 type="checkbox"
-//                 checked={selectedBoxes.includes(box.id)}
-//                 onChange={() => toggleSelection(box.id)}
-//               /> Select
-//             </label>
-//             <button onClick={() => handleDownload(box.id)} className="blue-btn">
-//               ⬇️ Download PNG
-//             </button>
-//           </div>
-//         ))}
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default BoxQRPage;
-import React, { useRef, useState } from 'react';
-import { useBoxContext } from '../context/BoxContext';
-import { QRCodeSVG } from 'qrcode.react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import '../styles/BoxQRPage.css'; // You'll create this file
-
-const BoxQRPage = () => {
-  const { boxes } = useBoxContext();
-  const [selectedBoxes, setSelectedBoxes] = useState([]);
-  const qrRefs = useRef({});
-
-  const handlePrint = () => {
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write('<html><head><title>Print All QR Codes</title></head><body>');
-    boxes.forEach((box) => {
-      const svg = qrRefs.current[box.id]?.outerHTML;
-      printWindow.document.write(`
-        <div style="text-align: center; margin: 1rem;">
-          ${svg}
-          <p>${box.title}</p>
-        </div>
-      `);
-    });
-    printWindow.document.write('</body></html>');
-    printWindow.document.close();
-    printWindow.print();
-  };
-
-  const toggleSelection = (boxId) => {
-    setSelectedBoxes((prev) =>
-      prev.includes(boxId) ? prev.filter((id) => id !== boxId) : [...prev, boxId]
-    );
-  };
-
-  const handlePrintSelected = () => {
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write('<html><head><title>Print QR Codes</title></head><body>');
-    selectedBoxes.forEach((boxId) => {
-      const svg = qrRefs.current[boxId]?.outerHTML;
-      const boxTitle = boxes.find((box) => box.id === boxId)?.title;
-      printWindow.document.write(`<div style="text-align: center; margin: 1rem;">${svg}<p>${boxTitle}</p></div>`);
-    });
-    printWindow.document.write('</body></html>');
-    printWindow.document.close();
-    printWindow.print();
-  };
-
-  return (
-    <div className="qr-page-wrapper">
-      <Link to="/" className="back-home-btn">🏠 Back to Home</Link>
-      <h1 className="form-title">📦 Box QR Codes</h1>
-  
-      <div className="qr-actions">
-        <button onClick={handlePrint} className="green-btn">🖨️ Print All</button>
-        <button
-          onClick={handlePrintSelected}
-          className={`green-btn ${selectedBoxes.length === 0 ? 'disabled' : ''}`}
-          disabled={selectedBoxes.length === 0}
-        >
-          🖨️ Print Selected
-        </button>
-      </div>
-  
-      <div className="qr-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
-        {boxes.map((box) => (
-          <div
-            key={box.id}
-            className={`qr-card ${selectedBoxes.includes(box.id) ? 'selected' : ''}`}
-            onClick={() => toggleSelection(box.id)}
-            style={{
-              padding: '1rem',
-              margin: '0.5rem',
-              border: '1px solid #ccc',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              transition: '0.2s ease',
-              background: selectedBoxes.includes(box.id) ? '#e6fbe6' : '#fff',
-              textAlign: 'center'
-            }}
-          >
-            <div ref={(el) => (qrRefs.current[box.id] = el)}>
-              <QRCodeSVG value={`${window.location.origin}/view/${box.id}`} size={200} />
-            </div>
-            <p className="qr-title">{box.title}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}  
-export default BoxQRPage;
-
+import { QRCodeSVG } from 'qrcode.react';
+import { useBoxContext } from '../context/BoxContext';
+import { useInventoryScope } from '../context/InventoryScope';
+import { boxLink } from '../utils/inventory';
+export default function BoxQRPage() {
+  const { boxes, loading, error } = useBoxContext(), { familyId } = useInventoryScope();
+  const [selected, setSelected] = useState([]);
+  return <main className="page-container label-page">
+    <div className="no-print"><Link to="/" className="back-button">Back to inventory</Link><h1>Box labels</h1>
+      <p>Select the boxes to print. Labels open your inventory when scanned.</p>
+      <div className="action-buttons"><button onClick={() => setSelected(boxes.map(b => b.id))}>Select all</button>
+        <button onClick={() => setSelected([])}>Clear selection</button><button disabled={!selected.length} onClick={() => window.print()}>Print {selected.length} labels</button></div></div>
+    {loading && <p role="status">Loading boxes…</p>}{error && <p role="alert">{error}</p>}
+    {!boxes.length && !loading && <p>Add a box to create its first label.</p>}
+    <div className="labels-grid">{boxes.map(box => <article key={box.id} className={'label-card ' + (selected.includes(box.id) ? 'print-selected' : 'print-hidden')}>
+      <label className="no-print"><input type="checkbox" checked={selected.includes(box.id)} onChange={e => setSelected(e.target.checked ? [...selected, box.id] : selected.filter(id => id !== box.id))} /> Print this label</label>
+      <QRCodeSVG value={boxLink(box.id, familyId)} size={180} marginSize={4} /><h2>{box.title}</h2><p>{box.location || ''}</p>
+    </article>)}</div>
+  </main>;
+}

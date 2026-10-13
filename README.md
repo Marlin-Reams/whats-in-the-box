@@ -1,70 +1,45 @@
-# Getting Started with Create React App
+# What's in the Box
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A family inventory app for remembering what you packed and where you put it. React and Firebase power personal inventories, shared families, item photos, QR labels and search.
 
-## Available Scripts
+## What's changed
 
-In the project directory, you can run:
+- Firestore document IDs stay stable after reload. Older stored UUIDs are recognized when resolving items and old in-app links.
+- The dashboard searches loose and boxed items, boxes, notes and locations.
+- Saves preserve input on failure and prevent duplicate submissions. Inventory subscriptions clear on account/scope changes.
+- Box deletion locks new item destinations, then releases existing items and removes the box in one batch. Boxes over 450 items must be emptied before deletion.
+- Hash-based QR links work on GitHub Pages. The 404 fallback handles older links inside the repository's URL prefix. Labels previously printed without that prefix must be reprinted.
+- Individual accounts can create/join families using expiring codes. Owners can revoke invitations, remove members and restore access. Removed members cannot reuse old invitation codes to restore themselves.
+- New photos load as authenticated Storage bytes. Family photos are copied into family storage rather than sharing personal download URLs.
+- Family copying keeps personal originals intact and skips completed copies on retry. It may complete partially if a photo or document fails; retry after fixing the reported error. Already copied records are not overwritten.
+- Shared forms, mobile layouts, native help dialogs and accessible labels replace duplicated implementations.
 
-### `npm start`
+## Requirements
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Node.js 22 or newer; Java 21 for emulator tests. Install packages with `npm ci`.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Copy `.env.example` to `.env.local` and fill in the public Firebase web configuration. Never commit private service-account files. `REACT_APP_ENABLE_FAMILIES=true` enables family controls only after the corresponding backend rules are ready.
 
-### `npm test`
+For local testing use a `demo-` project ID and set `REACT_APP_USE_EMULATORS=true`. Start `npm run emulators`, then run `npm start` in another terminal. The app connects to Auth on 9099, Firestore on 8080, and Storage on 9199.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Tests and builds
 
-### `npm run build`
+- `npm test -- --watchAll=false --runInBand`
+- `npm run test:rules` starts isolated Firestore/Storage emulators and tests their rules.
+- `npm run build` checks that a local emulator configuration cannot accidentally become a production build. Set `ALLOW_EMULATOR_BUILD=true` only when intentionally building a local emulator preview.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+The Windows Codex sandbox required a temporary native-realpath workaround for Jest and an explicit Node executable when using Firebase's standalone binary. These workarounds are confined to the ignored `work/` directory; ordinary local terminals should not need them.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Coordinated production release
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+1. Save/export the current rules and inventory. Keep a copy of the current deployed frontend for rollback.
+2. Review and test `firestore.rules` and `storage.rules`. These preserve personal inventory while introducing membership-controlled family collections.
+3. Deploy both rule files to the intended project. Storage's Firestore membership checks require the corresponding service integration permission when prompted by Firebase.
+4. Apply `cors.json` to the actual Storage bucket so authenticated image-byte requests can be made from the deployed origin. Restrict origins to your actual app and development environment.
+5. Build with the correct public production Firebase values, `REACT_APP_USE_EMULATORS=false`, and `REACT_APP_ENABLE_FAMILIES=true`. Review the built files, then publish them to GitHub Pages.
+6. Verify create → reload → edit → move → delete, a second family member, outsider denial, member removal, images and direct QR links on the live site. Test camera scanning and printing on your actual phone and printer.
+7. Reprint old malformed labels. Moving homes only changes box locations; new label IDs stay stable.
 
-### `npm run eject`
+Stricter rules should not be published separately while old browser bundles are still in active use without considering compatibility. Legacy item edits using an old UUID destination will need the new app's ID normalization. Existing personal download-token URLs remain shareable; their old tokens are not revoked by these changes. New family photos use authenticated reads, and copies create new photo objects.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+The repository includes Capacitor dependencies from the original project, but has no committed native Android configuration/project. This release targets the web app; a native Android package still requires separate setup and device testing.

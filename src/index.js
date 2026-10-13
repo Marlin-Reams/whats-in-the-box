@@ -1,17 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import { InventoryScopeProvider } from './context/InventoryScope';
 import { BoxProvider } from './context/BoxContext';
 import { ItemProvider } from './context/ItemContext';
-
-
+import './styles/index.css';
+import './styles/polish.css';
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <React.StrictMode>
-    <BoxProvider>
-      <ItemProvider>
-      <App />
-      </ItemProvider>
-    </BoxProvider>
-  </React.StrictMode>
-);
+root.render(<React.StrictMode><InventoryScopeProvider><BoxProvider><ItemProvider><App /></ItemProvider></BoxProvider></InventoryScopeProvider></React.StrictMode>);

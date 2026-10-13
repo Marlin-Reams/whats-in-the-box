@@ -1,200 +1,35 @@
-// AdminConsolePage.jsx
-import React, { useEffect, useState, useMemo } from 'react';
-import {
-  collection, getDocs, orderBy, query, doc, updateDoc, deleteDoc, addDoc
-} from 'firebase/firestore';
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { collection, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase/firebaseConfig';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { useNavigate } from 'react-router-dom';
-import '../styles/AdminConsole.css';
-
-const allowedUIDs = [
-  process.env.REACT_APP_ADMIN_UID_1,
-  process.env.REACT_APP_ADMIN_UID_2,
-].filter(Boolean); // remove undefineds
-
-const AdminConsolePage = () => {
-  const [requests, setRequests] = useState([]);
-  const [loading, setLoading] = useState(true);       // auth + data loading
-  const [authReady, setAuthReady] = useState(false);  // specifically wait for auth
-  const [user, setUser] = useState(null);
-  const [filter, setFilter] = useState('all');
-  const [tab, setTab] = useState('bug');
-  const [countdown, setCountdown] = useState(30);
-  const navigate = useNavigate();
-
-  const isAdmin = useMemo(
-    () => !!user && allowedUIDs.includes(user.uid),
-    [user]
-  );
-
-  // ✅ Wait for Firebase Auth to finish restoring the session
+import { useInventoryScope } from '../context/InventoryScope';
+export default function AdminConsolePage() {
+  const { user } = useInventoryScope();
+  const admin = [process.env.REACT_APP_ADMIN_UID_1, process.env.REACT_APP_ADMIN_UID_2].filter(Boolean).includes(user?.uid);
+  const [requests, setRequests] = useState([]), [loading, setLoading] = useState(true), [error, setError] = useState('');
+  const [type, setType] = useState('bug'), [filter, setFilter] = useState('all'), [busy, setBusy] = useState(false);
   useEffect(() => {
-    const auth = getAuth();
-    const unsub = onAuthStateChanged(auth, (u) => {
-      setUser(u);
-      setAuthReady(true);
-    });
-    return unsub;
-  }, []);
-
-  // ✅ Fetch only after we *know* auth state and user is admin
-  useEffect(() => {
-    const fetchRequests = async () => {
-      try {
-        const q = query(collection(db, 'requests'), orderBy('submittedAt', 'desc'));
-        const snapshot = await getDocs(q);
-        const all = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        setRequests(all);
-      } catch (err) {
-        console.error("❌ Failed to fetch requests:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (!authReady) return;          // wait for onAuthStateChanged
-    if (isAdmin) fetchRequests();
-    else setLoading(false);          // not admin → stop loading
-  }, [authReady, isAdmin]);
-
-  // ✅ Unauthorized redirect only after auth is known
-  useEffect(() => {
-    if (!authReady) return;
-    if (user && !isAdmin) {
-      const interval = setInterval(() => {
-        setCountdown(prev => {
-          if (prev === 1) {
-            navigate('/');
-            clearInterval(interval);
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      // Optional: log unauthorized attempt
-      (async () => {
-        try {
-          await addDoc(collection(db, 'unauthorizedAccessLogs'), {
-            uid: user?.uid || 'anonymous',
-            attemptedAt: new Date().toISOString(),
-            page: 'admin-console'
-          });
-        } catch (err) {
-          console.error("Failed to log unauthorized attempt:", err);
-        }
-      })();
-
-      return () => clearInterval(interval);
-    }
-  }, [authReady, user, isAdmin, navigate]);
-
-  const updateRequestStatus = async (id, status) => {
-    try {
-      await updateDoc(doc(db, 'requests', id), { status });
-      setRequests(prev => prev.map(r => r.id === id ? { ...r, status } : r));
-    } catch (err) {
-      console.error('❌ Failed to update status:', err);
-    }
-  };
-
-  const deleteRequest = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this request?")) return;
-    try {
-      await deleteDoc(doc(db, 'requests', id));
-      setRequests(prev => prev.filter(r => r.id !== id));
-    } catch (err) {
-      console.error('❌ Failed to delete request:', err);
-    }
-  };
-
-  if (!authReady || loading) return <p>Loading…</p>;
-
-  if (!isAdmin) {
-    return (
-      <div className="unauthorized-container">
-        <h2 className="unauthorized-header">🚨 Unauthorized Access</h2>
-        <p>This attempt has been logged.</p>
-        <p>You will be redirected in <strong>{countdown}</strong> seconds.</p>
-      </div>
-    );
+    if (!admin) { setLoading(false); return; }
+    return onSnapshot(collection(db, 'requests'), snapshot => {
+      setRequests(snapshot.docs.map(record => ({ ...record.data(), id: record.id })).sort((a,b) => String(b.submittedAt).localeCompare(String(a.submittedAt))));
+      setLoading(false);
+    }, () => { setError('Could not load requests. Check your permissions and connection.'); setLoading(false); });
+  }, [admin]);
+  async function act(task) {
+    setBusy(true); setError('');
+    try { await task(); } catch { setError('The change could not be saved. Try again.'); } finally { setBusy(false); }
   }
-
-  const filteredRequests = requests.filter(r =>
-    r.type === tab && (filter === 'all' || (r.status || 'submitted') === filter)
-  );
-
-  const countByStatus = (status) =>
-    requests.filter(r => r.type === tab && (r.status || 'submitted') === status).length;
-
-  // Helper to render Firestore Timestamp or ISO/string
-  const fmt = (submittedAt) => {
-    try {
-      if (!submittedAt) return '—';
-      if (typeof submittedAt.toDate === 'function') return submittedAt.toDate().toLocaleString();
-      return new Date(submittedAt).toLocaleString();
-    } catch {
-      return '—';
-    }
-  };
-
-  return (
-    <div className="admin-console">
-      <button className="return-button" onClick={() => navigate('/')}>🔙 Return to App</button>
-      <h1>🛠️ Admin Console</h1>
-
-      <div className="tab-bar">
-        {['bug', 'feature', 'support'].map(t => (
-          <button
-            key={t}
-            className={`tab-btn ${tab === t ? 'active' : ''}`}
-            onClick={() => setTab(t)}
-          >
-            {t.charAt(0).toUpperCase() + t.slice(1)}s
-          </button>
-        ))}
-      </div>
-
-      <div className="status-filter">
-        {['all', 'submitted', 'working', 'testing', 'corrected'].map(status => (
-          <button
-            key={status}
-            className={`filter-btn ${filter === status ? 'active' : ''}`}
-            onClick={() => setFilter(status)}
-          >
-            {status[0].toUpperCase() + status.slice(1)} ({countByStatus(status)})
-          </button>
-        ))}
-      </div>
-
-      {filteredRequests.length === 0 ? (
-        <p>No {tab} requests found for filter: <strong>{filter}</strong>.</p>
-      ) : (
-        <ul className="bug-report-list">
-          {filteredRequests.map((req) => {
-            const statusClass = req.status || 'submitted';
-            return (
-              <li key={req.id} className={`bug-report-item ${statusClass}`}>
-                <p><strong>Description:</strong> {req.description}</p>
-                <p><strong>User:</strong> {req.userId}</p>
-                <p><strong>Submitted:</strong> {fmt(req.submittedAt)}</p>
-                <p><strong>Status:</strong> {statusClass}</p>
-                <div className="bug-actions">
-                  <button onClick={() => updateRequestStatus(req.id, 'working')}>🔧 Working</button>
-                  <button onClick={() => updateRequestStatus(req.id, 'testing')}>🧪 Testing</button>
-                  <button onClick={() => updateRequestStatus(req.id, 'corrected')}>✅ Corrected</button>
-                  <button onClick={() => deleteRequest(req.id)}>🗑️ Delete</button>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </div>
-  );
-};
-
-export default AdminConsolePage;
-
-
-
+  if (!admin) return <main className="page-container"><h1>Admin access required</h1><p>This page is for app support administrators.</p><Link to="/">Back to inventory</Link></main>;
+  const filtered = requests.filter(r => r.type === type && (filter === 'all' || (r.status || 'submitted') === filter));
+  return <main className="page-container"><Link to="/" className="back-button">Back to inventory</Link><h1>Support requests</h1>
+    <label>Request type<select value={type} onChange={e => setType(e.target.value)}><option value="bug">Bugs</option><option value="feature">Ideas</option><option value="support">Support</option></select></label>
+    <div className="action-buttons">{['all','submitted','working','testing','corrected'].map(status => <button aria-pressed={filter === status} key={status} onClick={() => setFilter(status)}>
+      {status} ({requests.filter(r => r.type === type && (status === 'all' || (r.status || 'submitted') === status)).length})
+    </button>)}</div>{error && <p role="alert">{error}</p>}
+    {loading ? <p role="status">Loading requests…</p> : !filtered.length ? <p>No requests for this filter.</p> :
+      filtered.map(request => <article className="box-card" key={request.id}><p>{request.description}</p><p>Status: {request.status || 'submitted'}</p>
+        <label>Change status<select disabled={busy} value={request.status || 'submitted'} onChange={e => act(() => updateDoc(doc(db, 'requests', request.id), { status: e.target.value }))}>
+          {['submitted','working','testing','corrected'].map(status => <option key={status}>{status}</option>)}</select></label>
+        <button disabled={busy} className="delete" onClick={() => { if (window.confirm('Delete this support request?')) act(() => deleteDoc(doc(db, 'requests', request.id))); }}>Delete request</button>
+      </article>)}</main>;
+}

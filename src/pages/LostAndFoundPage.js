@@ -1,54 +1,23 @@
-// src/pages/LostAndFoundPage.js
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useItemContext } from '../context/ItemContext';
 import { useBoxContext } from '../context/BoxContext';
-import '../styles/LostAndFoundPage.css';
-
-
-const LostAndFoundPage = () => {
-  const { items, moveItemToBox } = useItemContext();
-  const { boxes } = useBoxContext();
-
-  const missingItems = items.filter(item => {
-    return (
-      item.boxId !== null &&
-      !boxes.some(box => box.id === item.boxId)
-    );
-  });
-
-  const handleMove = (itemId, boxId) => {
-    moveItemToBox(itemId, boxId);
-  };
-
-  return (
-    <div className="lost-found-page">
-        <Link to="/" className="back-button">🏠 Back to Home</Link>
-      <h2>🧳 Lost & Found Items</h2>
-      {missingItems.length === 0 ? (
-        <p>🎉 No orphaned items found. Everything is in a box!</p>
-      ) : (
-        <div className="lost-items-grid">
-          {missingItems.map(item => (
-            <div key={item.id} className="lost-item-card">
-              <h4>{item.name || 'Unnamed Item'}</h4>
-              {item.photo && <img src={item.photo} alt={item.name} style={{ maxWidth: '100px' }} />}
-              <p>Original boxId: {item.boxId}</p>
-
-              <select onChange={(e) => handleMove(item.id, e.target.value)} defaultValue="">
-                <option value="" disabled>Move to...</option>
-                {boxes.map(box => (
-                  <option key={box.id} value={box.id}>{box.title}</option>
-                ))}
-              </select>
-
-              <button onClick={() => handleMove(item.id, null)}>🧺 Move to Loose Items</button>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default LostAndFoundPage;
+import ItemPhoto from '../components/ItemPhoto';
+export default function LostAndFoundPage() {
+  const { items, moveItemToBox, loading, error } = useItemContext(), { boxes, loading: boxLoading } = useBoxContext();
+  const [busy, setBusy] = useState(false), [failure, setFailure] = useState('');
+  async function move(id, boxId) {
+    if (busy) return; setBusy(true); setFailure('');
+    try { await moveItemToBox(id, boxId); } catch (err) { setFailure(err.message || 'Could not move this item. Try again.'); } finally { setBusy(false); }
+  }
+  const missing = items.filter(item => item.boxId && !boxes.some(box => box.id === item.boxId));
+  return <main className="page-container"><Link to="/" className="back-button">Back to inventory</Link><h1>Items with a missing box</h1>
+    <p>These items are still saved. Choose a new box or keep them as loose items.</p>
+    {(error || failure) && <p role="alert">{error || failure}</p>}
+    {loading || boxLoading ? <p role="status">Checking your inventory…</p> : !missing.length ? <p>Everything has a known place.</p> :
+      <div className="item-grid">{missing.map(item => <article className="item-card" key={item.id}><ItemPhoto item={item} /><h2>{item.name}</h2>
+        <label>Move to box<select disabled={busy} defaultValue="" onChange={e => move(item.id, e.target.value)}><option value="" disabled>Choose a box</option>
+          {boxes.map(box => <option key={box.id} value={box.id}>{box.title}</option>)}</select></label>
+        <button disabled={busy} onClick={() => move(item.id, null)}>Move to loose items</button></article>)}</div>}
+  </main>;
+}
