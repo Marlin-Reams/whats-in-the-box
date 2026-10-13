@@ -7,6 +7,7 @@ export default function ItemForm({ onSubmit, buttonLabel = 'Save item', initialI
   const [item, setItem] = useState(initialItem), [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false), [error, setError] = useState('');
   const fileRef = useRef(null);
+  const cameraRef = useRef(null);
   const change = (field, value) => setItem(current => ({ ...current, [field]: value }));
   async function upload(event) {
     const file = event.target.files?.[0];
@@ -28,7 +29,7 @@ export default function ItemForm({ onSubmit, buttonLabel = 'Save item', initialI
     setError(''); setSaving(true);
     try {
       await onSubmit(validateItem(item));
-      if (resetOnSuccess) { setItem(empty); if (fileRef.current) fileRef.current.value = ''; }
+      if (resetOnSuccess) { setItem(empty); if (fileRef.current) fileRef.current.value = ''; if (cameraRef.current) cameraRef.current.value = ''; }
     } catch (failure) { setError(failure.message || 'Could not save this item. Your changes are still here.'); }
     finally { setSaving(false); }
   }
@@ -37,7 +38,13 @@ export default function ItemForm({ onSubmit, buttonLabel = 'Save item', initialI
       <label>Item name<input value={item.name} onChange={e => change('name', e.target.value)} required maxLength={120} autoFocus /></label>
       <label>Quantity<input type="number" min="1" max="100000" step="1" value={item.quantity} onChange={e => change('quantity', e.target.value)} required /></label>
       <label>Description<textarea value={item.description || ''} onChange={e => change('description', e.target.value)} maxLength={2000} rows={3} /></label>
-      <label>Photo (optional)<input type="file" accept="image/*" onChange={upload} ref={fileRef} /></label>
+      <p>Photo (optional)</p>
+      <input hidden type="file" accept="image/*" capture="environment" onChange={upload} ref={cameraRef} />
+      <input hidden type="file" accept="image/*" onChange={upload} ref={fileRef} />
+      <div className="action-buttons">
+        <button type="button" onClick={() => { cameraRef.current.value = ''; cameraRef.current.click(); }}>Take photo</button>
+        <button type="button" onClick={() => { fileRef.current.value = ''; fileRef.current.click(); }}>Choose existing photo</button>
+      </div>
       <ItemPhoto item={item} />
     </fieldset>
     {error && <p role="alert" className="error-text">{error}</p>}
