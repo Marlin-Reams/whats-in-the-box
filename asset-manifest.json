@@ -1,11 +1,11 @@
 {
   "files": {
     "main.css": "/whats-in-the-box/static/css/main.f21bc449.css",
-    "main.js": "/whats-in-the-box/static/js/main.a716f43a.js",
+    "main.js": "/whats-in-the-box/static/js/main.4ab3ff88.js",
     "index.html": "/whats-in-the-box/index.html"
   },
   "entrypoints": [
     "static/css/main.f21bc449.css",
-    "static/js/main.a716f43a.js"
+    "static/js/main.4ab3ff88.js"
   ]
 }
